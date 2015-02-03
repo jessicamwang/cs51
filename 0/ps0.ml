@@ -32,10 +32,10 @@ let print_survey () =
   let (first, last) = name in
   let string_year =
     (match class_year with
-       | Freshman -> "2017"
-       | Sophomore -> "2016"
-       | Junior -> "2015"
-       | Senior -> "2014"
+       | Freshman -> "2018"
+       | Sophomore -> "2017"
+       | Junior -> "2016"
+       | Senior -> "2015"
        | Other s -> "Other: " ^ s
     ) in
     (print "----------------------------------------\n";
