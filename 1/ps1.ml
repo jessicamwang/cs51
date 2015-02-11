@@ -11,19 +11,15 @@ open Core.Std
  * before submission. *)
 
 (*>* Problem 1a *>*)
-(*
-let prob1a : ??? = let greet y = "Hello " ^ y in greet "World!";;
-*)
+let prob1a : string = let greet y = "Hello " ^ y in greet "World!";;
+
 
 (*>* Problem 1b *>*)
-(*
-let prob1b : ??? = [Some 7; Some 1; None; Some 1];;
-*)
+let prob1b : (int option) list = [Some 7; Some 1; None; Some 1];;
 
 (*>* Problem 1c *>*)
-(*
-let prob1c : ??? = ((None, Some 42.0), true);;
-*)
+let prob1c : ('a option * float option) * bool = ((None, Some 42.0), true);;
+
 
 
 (* Explain in a comment why the following will not type check,
@@ -34,12 +30,29 @@ let prob1c : ??? = ((None, Some 42.0), true);;
 let prob1d : string * int list = [("CS", 51); ("CS", 50)];;
 *)
 
+(*
+You need to group together 'string * int' with parenthesis before 'list' 
+otherwise the program reads it was a tuple of a string and an int list 
+instead of a list of string and int tuples
+*)
+
+let prob1d : (string * int) list = [("CS", 51); ("CS", 50)];;
+
 (*>* Problem 1e *>*)
 (*
 let prob1e : int =
   let compare (x,y) = x < y in
   if compare (5, 4.9) then 5 else 2;;
 *)
+
+(*
+The function compare expects two values with the same type, but 5 is an int
+while 4.9 is a float. To correct this error make both values in compare a float
+*)
+
+let prob1e : int =
+  let compare (x, y) = x < y in
+  if compare (5.0, 4.9) then 5 else 2;;
 
 (*>* Problem 1f *>*)
 (*
@@ -49,6 +62,15 @@ let prob1f : (string * string) list =
    ("September", 3); ("October", 1); ("November", 2); ("December", 11)] ;;
 *)
 
+(*
+string * string is the incorrect type,  to fix this the type should be string * int option. Additionally all the ints listed must have Some added before them
+*)
+
+let prob1f : (string * int option) list =
+  [("January", None); ("February", None); ("March", Some 15); ("April", None);
+   ("May", None); ("June", Some 1); ("July", Some 4); ("August", None);
+   ("September", Some 3); ("October", Some 1); ("November", Some 2);
+   ("December", Some 11)] ;;
 
 
 (* Problem 2 - Write the following functions *)
@@ -68,6 +90,24 @@ let prob1f : (string * string) list =
 (* Implement reversed below, and be sure to write tests for it (see 2b for
  * examples of tests). *)
 
+let rec reversed (x : int list) : bool = 
+  match x with 
+  |[] -> true
+  |hd1::tl -> 
+    (match tl with
+    |[] -> true
+    |hd2::_ ->
+       if hd1 >= hd2 then false
+       else reversed tl);;
+
+let () = assert (reversed [] = true);;
+let () = assert (reversed [1;] = true);;
+let () = assert (reversed [1; 2; 3; 4; 5; 6; 7] = true);;
+let () = assert (reversed [1; 2; 4; 3; 5; 6; 7] = false);;
+let () = assert (reversed [1; 2; 3; 3; 5; 6; 7] = false);;
+let () = assert (reversed [1; 6; 9; 10; 15] = true);;
+let () = assert (reversed [1; 3; 6; 9; 8] = false);;
+
 
 (*>* Problem 2b *>*)
 
@@ -84,10 +124,18 @@ merge [0;3;5;711;747] [2;4;6;12];;
 *)
 
 (* The type signature for merge is as follows: *)
-(* merge : int list -> int list -> int list *)
+let rec merge (x : int list) (y : int list) : int list = 
+  match (x, y) with
+  |([], []) -> []
+  |([], _) -> y
+  |(_, []) -> x
+  |(xhd::xtl, yhd::ytl) ->
+    if xhd <= yhd then 
+       xhd::merge xtl y
+    else
+       yhd::merge x ytl;;
+     
 
-(*
-(* sample tests *)
 let () = assert ((merge [1;2;3] [4;5;6;7]) = [1;2;3;4;5;6;7]);;
 let () = assert ((merge [4;5;6;7] [1;2;3]) = [1;2;3;4;5;6;7]);;
 let () = assert ((merge [4;5;6;7] [1;2;3]) = [1;2;3;4;5;6;7]);;
@@ -98,7 +146,7 @@ let () = assert ((merge [] []) = []);;
 let () = assert ((merge [1] []) = [1]);;
 let () = assert ((merge [] [-7]) = [-7]);;
 let () = assert ((merge [1] [-1]) = [-1;1]);;
-*)
+
 
 
 (*>* Problem 2c *>*)
@@ -113,10 +161,17 @@ unzip [(1,2);(3,4);(5,6)];;
 
 *)
 
-
 (* The type signature for unzip is as follows: *)
-(* unzip : (int * int) list -> int list * int list) *)
-
+let rec unzip (x : (int * int) list) : int list * int list =
+  match x with
+  |[] -> ([], [])
+  |(xhd1,xhd2)::xtl -> 
+    let (newls1, newls2) = unzip xtl in
+    (xhd1::newls1, xhd2::newls2);;
+    
+let () = assert ((unzip []) = ([],[]));;
+let () = assert ((unzip [(1,2); (3,4)]) = ([1;3],[2;4]));;
+let () = assert ((unzip [(1,2); (3,4); (5,6)]) = ([1;3;5],[2;4;6]));;
 
 (*>* Problem 2d *>*)
 
@@ -136,6 +191,37 @@ variance [1.0];;
  * function can cast an int to a float. *)
 
 (* variance : float list -> float option *)
+let rec sum (x : float list) : float =
+  match x with
+  |[] -> 0.0
+  |hd::tl -> hd +. sum tl;;
+  
+let rec length (x : float list)  : int = 
+  match x with
+  |[] -> 0
+  |_::tl -> 1 + length tl;;
+  
+let mean (x : float list) : float =
+  sum x /. float (length x);;
+  
+let sqr (x : float) : float = 
+  x *. x;;
+  
+let variance (x : float list) : float option =
+  match x with 
+  |[] -> None
+  |[_] -> None
+  |_ ->
+    let rec calc (y : float list) : float =
+      match y with
+      |[] -> 0.0
+      |hd::tl -> sqr (hd -. mean x) +. (calc tl) in
+  Some ((1.0 /. (float (length x) -. 1.0)) *. calc x);;
+  
+let () = assert ((variance []) = None);;
+let () = assert ((variance [1.0]) = None);;
+let () = assert ((variance [1.0; 1.0]) = Some 0.0);;
+let () = assert ((variance [1.0; 2.0; 3.0; 4.0; 5.0]) = Some 2.5);; 
 
 
 (*>* Problem 2e *>*)
@@ -159,6 +245,20 @@ few_divisors 12 7;;
 (* The type signature for few_divisors is: *)
 (* few_divisors : int -> int -> bool *)
 
+let rec divisors (x : int) (y : int) : int =
+  if y = 0 then 0
+  else if x mod y = 0 then
+          1 + divisors x (y - 1)
+       else
+          divisors x (y - 1);;
+
+let few_divisors (x : int) (y : int) : bool =
+  if (divisors x x) < y then true
+    else false;;
+
+let () = assert (few_divisors 23 3 = true);;
+let () = assert (few_divisors 12 6 = false);;
+let () = assert (few_divisors 12 7 = true);;
 
 (*>* Problem 2f *>*)
 
@@ -180,6 +280,17 @@ concat_list ", " ["Moo"];;
 (* The type signature for concat_list is: *)
 (* concat_list : string -> string list -> string *)
 
+let rec concat_list (str : string) (lst : string list) : string =
+  match lst with
+  |[] -> ""
+  |[hd] -> hd
+  |hd::tl -> hd ^ str ^ (concat_list str tl);;
+
+let () = assert (concat_list ", " ["George"; "Beth"; "Ned"] = "George, Beth, Ned");;
+let () = assert (concat_list "..." ["Moo"; "Baaa"; "Quack"] = "Moo...Baaa...Quack");;
+let () = assert (concat_list ", " [] = "");;
+let () = assert (concat_list ", " ["Moo"] = "Moo");;
+
 (*>* Problem 2g *>*)
 
 (* One way to compress a list of characters is to use run-length encoding.
@@ -200,6 +311,43 @@ concat_list ", " ["Moo"];;
 (* The type signatures for to_run_length and from_run_length are: *)
 (* to_run_length : char list -> (int * char) list *)
 (* from_run_length : (int * char) list -> char list *)
+
+let rec to_run_length (x : char list) : (int * char) list =
+  match x with
+  |[] -> []
+  |[hd] -> [(1 , hd)]
+  |hd::tl1 -> 
+    (match to_run_length tl1 with
+     |[] -> []
+     |(num, letter)::tl2 ->
+       if letter = hd then
+         (num + 1 , letter)::tl2
+       else
+         (1 , hd)::(num,letter)::tl2);;
+         
+let () = assert (to_run_length ['a';'a';'a';'a';'b';'b';'b';'b';'c';'d'
+                ;'d';'d';'d'] = [(4,'a');(4,'b');(1,'c');(4,'d')]);;
+let () = assert (to_run_length ['a';'b';'c';'d'] = 
+                [(1,'a');(1,'b');(1,'c');(1,'d')]);;
+let () = assert (to_run_length [] = []);;
+let () = assert (to_run_length ['a'] = [(1,'a');]);;
+
+let rec lengthen (num : int) (letter : char) : char list =
+  match num with 
+  |0 -> []
+  |_ -> letter::(lengthen (num - 1) letter);;
+  
+let rec from_run_length (x : (int * char) list) : char list =
+  match x with
+  |[] -> []
+  |(num, letter)::tl -> (lengthen num letter)@(from_run_length tl);;
+        
+let () = assert (from_run_length [(4,'a');(4,'b');(1,'c');(4,'d')] =
+                ['a';'a';'a';'a';'b';'b';'b';'b';'c';'d';'d';'d';'d']);;
+let () = assert (from_run_length [(1,'a');(1,'b');(1,'c');(1,'d')] = 
+                ['a';'b';'c';'d']);;
+let () = assert (from_run_length [] = []);;
+let () = assert (from_run_length [(1,'a')] = ['a']);;
 
 (*>* Problem 3 *>*)
 
@@ -224,3 +372,12 @@ concat_list ", " ["Moo"];;
 
 (* The type signature for permuations is: *)
 (* permutations : int list -> int list list *)
+let rec interleave (x : int) (lst : int list) : int list list =
+  match lst with
+  |[] -> [[x]]
+  |hd::tl -> (x::lst)::(List.map ~f:(fun y -> hd::y) (interleave x tl));;
+  
+let rec permutations (lst:int list) : int list list = 
+  match lst with 
+  |[] -> [[]]
+  |hd::tl -> List.concat (List.map ~f:(interleave hd) (permutations tl));;
