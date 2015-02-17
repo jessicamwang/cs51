@@ -6,30 +6,13 @@ open Core.Std
 (******       1.1: Sparking your INTerest      ******)
 (****************************************************)
 
-(* Solve each problem in this part using List.map, List.fold_right, or
- * List.filter.
- *
- * See the Ocaml Core Library documentation on lists:
- * https://ocaml.janestreet.com/ocaml-core/109.60.00/doc/core/#Std.List
- *
- * A solution, even a working one, that does not use one of these
- * higher-order functions, will receive little or no credit.
- * However, if you can express your solution to
- * one particular part in terms of another function from
- * another part, you may do so.
- *
- * You MAY NOT change the definition of these
- * functions to make them recursive. 
- *)
-
 (*>* Problem 1.1.a *>*)
 
 (*  negate_all : Flips the sign of each element in a list *)
 let negate_all (nums:int list) : int list =
-    failwith "Not implemented"
+  List.map nums ~f:(fun (x : int) -> -x)
 ;;
 
-(* Unit test example. *)
 assert ((negate_all [1; -2; 0]) = [-1; 2; 0]) ;;
 
 
@@ -37,57 +20,73 @@ assert ((negate_all [1; -2; 0]) = [-1; 2; 0]) ;;
 
 (*  sum : Returns the sum of the elements in the list. *)
 let sum (nums:int list) : int =
-    failwith "Not implemented"
+  List.fold_right nums ~f:(fun (x : int) (tot : int) -> x + tot) ~init:0
 ;;
+
+assert ((sum [-3;4;-7]) = -6);;
+assert ((sum []) = 0);;
+assert ((sum [1]) = 1);;
 
 
 (*>* Problem 1.1.c *>*)
 
 (*  sum_rows : Takes a list of int lists (call an internal list a "row").
  *             Returns a one-dimensional list of ints, each int equal to the
- *             sum of the corresponding row in the input.
- *   Example : sum_rows [[1;2]; [3;4]] = [3; 7] *)
+ *             sum of the corresponding row in the input. *)
 let sum_rows (rows:int list list) : int list =
-    failwith "Not implemented"
+  List.map rows ~f:(fun (lst : int list) -> sum lst)
 ;;
+
+assert ((sum_rows [[7;8;3;5]; [6;4;3]]) = [23;13]);;
+assert ((sum_rows [[]; [7;8;5]]) = [0;20]);;
 
 
 (*>* Problem 1.1.d *>*)
 
-(*  filter_odd : Retains only the odd numbers from the given list.
- *     Example : filter_odd [1;4;5;-3] = [1;5;-3]. *)
+(*  filter_odd : Retains only the odd numbers from the given list. *)
 let filter_odd (nums:int list) : int list =
-    failwith "Not implemented"
+  List.filter nums ~f:(fun (x : int) -> x % 2 = 1)
 ;;
+
+assert ((filter_odd [1;2;3;5;4;6;8;1]) = [1;3;5;1]);;
+assert ((filter_odd [2;4;6]) = []);;
 
 
 (*>* Problem 1.1.e *>*)
 
-(*  num_occurs : Returns the number of times a given number appears in a list.
- *     Example : num_occurs 4 [1;3;4;5;4] = 2 *)
+(*  num_occurs : Returns the number of times a given number appears in a
+                 list. *)
 let num_occurs (n:int) (nums:int list) : int =
-    failwith "Not implemented"
+  List.fold_right nums ~f:(fun (x : int) (count : int) -> 
+                             if x = n then count + 1 else count)
+  ~init:0
 ;;
+
+assert ((num_occurs 4 [1;3;4;5;4]) = 2);;
+assert ((num_occurs 0 [1;3;4;5;4]) = 0);;
 
 
 (*>* Problem 1.1.f *>*)
 
-(*  super_sum : Sums all of the numbers in a list of int lists
- *    Example : super_sum [[1;2;3];[];[5]] = 11 *)
+(*  super_sum : Sums all of the numbers in a list of int lists. *)
 let super_sum (nlists:int list list) : int =
-    failwith "Not implemented"
+    sum (sum_rows nlists)
 ;;
+
+assert ((super_sum [[1;2;3];[];[5]]) = 11);;
 
 (*>* Problem 1.1.g *>*)
 
 (*  filter_range : Returns a list of numbers in the input list within a
  *                 given range (inclusive), in the same order they appeared
- *                 in the input list.
- *       Example : filter_range [1;3;4;5;2] (1,3) = [1;3;2] *)
+ *                 in the input list. *)
 let filter_range (nums:int list) (range:int * int) : int list =
-    failwith "Not implemented"
+  let (a,b) = range in
+  List.filter nums ~f:(fun (x : int) -> x >= a && x <= b)
 ;;
 
+assert ((filter_range [1;3;4;5;2] (1,3)) = [1;3;2]);;
+assert ((filter_range [1;3;4;5;2] (-1,0)) = []);;
 
 
 (****************************************************)
@@ -99,54 +98,73 @@ let filter_range (nums:int list) (range:int * int) : int list =
 
 (*  floats_of_ints : Converts an int list into a list of floats *)
 let floats_of_ints (nums:int list) : float list =
-    failwith "Not implemented"
+  List.map nums ~f:(fun (x : int) -> float x)
 ;;
+
+assert ((floats_of_ints [1;3;4;6]) = [1.;3.;4.;6.]);;
 
 
 (*>* Problem 1.2.b *>*)
 
 (*   log10s : Applies the log10 function to all members of a list of floats.
  *            The mathematical function log10 is not defined for
- *            numbers n <= 0, so undefined results should be None.
- *  Example : log10s [1.0; 10.0; -10.0] = [Some 0.; Some 1.; None] *)
+ *            numbers n <= 0, so undefined results should be None. *)
 let log10s (lst: float list) : float option list =
-    failwith "Not implemented"
+  List.map lst ~f:(fun (x : float) -> 
+                     if x <= 0. then None else Some (log10 x))
 ;;
+
+assert ((log10s [1.;0.;10.;-3.;50.]) = [Some 0.; None; Some 1.; None; Some (log10 50.)]);;
 
 
 (*>* Problem 1.2.c *>*)
 
-(*  deoptionalize : Extracts values from a list of options.
- *        Example : deoptionalize [Some 3; None; Some 5; Some 10] = [3;5;10] *)
+(*  deoptionalize : Extracts values from a list of options. *)
 let deoptionalize (lst:'a option list) : 'a list =
-    failwith "Not implemented"
+  List.fold_right lst ~f:(fun (x:'a option) (all:'a list) ->
+                            match x with
+                            | None -> all
+                            | Some a -> a :: all)
+                      ~init:[]
 ;;
+
+assert ((deoptionalize [Some 3; None; Some 5; None; Some 10]) = [3;5;10]);;
 
 
 (*>* Problem 1.2.d *>*)
 
-(*  some_sum : Sums all of the numbers in a list of int options;
- *             ignores None values *)
+(*  some_sum : Sums all of the numbers in a list of int options,
+ *             ignoring None values *)
 let some_sum (nums:int option list) : int =
-    failwith "Not implemented"
+  sum (deoptionalize nums)
 ;;
+
+assert ((some_sum [Some 3; None; Some 5; None; Some 10]) = 18);;
+assert ((some_sum [None; None;]) = 0);;
 
 
 (*>* Problem 1.2.e *>*)
 
-(*  mult_odds : Product of all of the odd members of a list.
- *    Example : mult_odds [1;3;0;2;-5] = -15 *)
+(*  mult_odds : Product of all of the odd members of a list. *)
 let mult_odds (nums:int list) : int =
-    failwith "Not implemented"
+  List.fold_right (filter_odd nums)
+  ~f:(fun (x : int) (prod : int) -> x * prod) ~init:1
 ;;
+
+assert ((mult_odds [1;3;0;2;-5]) = -15);;
 
 
 (*>* Problem 1.2.f *>*)
 
 (*  concat : Concatenates a list of lists. See the Ocaml library ref *)
 let concat (lists:'a list list) : 'a list =
-    failwith "Not implemented"
+  List.fold_right lists 
+  ~f:(fun (lst : 'a list) (all : 'a list) -> lst @ all)
+  ~init:[]
 ;;
+
+assert ((concat [['h';'i'];[' '];['t';'h';'e';'r';'e']]) 
+        = ['h';'i';' ';'t';'h';'e';'r';'e']);;
 
 
 (*>* Problem 1.2.g *>*)
@@ -156,17 +174,18 @@ type name = string
 type year = int
 type student = name * year
 
-(*  filter_by_year : returns the names of the students in a given year
- *         Example : let students = [("Joe",2010);("Bob",2010);("Tom",2013)];;
- *                   filter_by_year students 2010 => ["Joe";"Bob"] *)
+(*  filter_by_year : returns the names of the students in a given year *)
 let filter_by_year (slist:student list) (yr:year) : name list =
-    failwith "Not implemented"
+  let in_year = List.filter slist ~f:(fun (s : name * year) -> 
+                                        let (_,y) = s in
+                                        y = yr)
+  in
+  List.map in_year ~f:(fun (s : name * year) ->
+                         let (n,_) = s in n)
 ;;
 
+assert ((filter_by_year [("Joe",2010);("Bob",2010);("Tom",2013)] 2010)
+        = ["Joe";"Bob"]);;
 
 (*>* Problem 1.3 *>*)
-
-(* Please give us an honest estimate of how long this Part of the problem
- * set took you to complete.  We care about your responses and will use
- * them to help guide us in creating future assignments. *)
-let minutes_spent_on_part_1 : int = failwith "Not implemented";;
+let minutes_spent_on_part_1 : int = 90;;
