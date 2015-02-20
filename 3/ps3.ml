@@ -5,13 +5,11 @@ exception ImplementMe
 type bignum = {neg: bool; coeffs: int list}
 let base = 10
 
-(* Please make sure you fully understand the representation invariant for
- * bignums, as documented in the problem set specification. *)
-
 (*>* Problem 1.1 *>*)
 let negate (b : bignum) : bignum =
-  raise ImplementMe
-
+  if b.coeffs = [] then b
+  else {neg = not b.neg; coeffs = b.coeffs}
+;;
 
 (* Sample negate tests: more exhaustive testing for all other functions
  * is required. (An example of such testing is test_equals below).
@@ -21,9 +19,16 @@ let _ = assert(negate {neg = false; coeffs = []}
 let _ = assert(negate {neg = true; coeffs = [1; 2]}
                     = {neg = false; coeffs = [1; 2]})
 
+
 (*>* Problem 1.3.1 *>*)
 let fromInt (n: int) : bignum =
-  raise ImplementMe
+  let rec to_base (num : int) (coeffs : int list) : int list =
+    if num = 0 then coeffs
+    else to_base (num / base) ((num % base) :: coeffs)
+  in
+  if n < 0 then {neg = true; coeffs = to_base (-n) []}
+  else {neg = false; coeffs = to_base n []}
+;;
 
 
 (** Some helpful functions **)
@@ -127,7 +132,8 @@ let toString (b : bignum) : string =
 
 (*>* Problem 1.2 *>*)
 let rec equal (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
+  b1 = b2
+;;
 
 
 (* Automated testing function. Use this function to help you catch potential
@@ -148,16 +154,57 @@ let () = test_equal 10000 (-10000)
 let () = test_equal (-10000) 9999
 
 let less (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
+  if not (b1.neg = b2.neg) then b2.neg
+  else
+    let rec less_helper (coeffs1 : int list) (coeffs2 : int list) : bool =
+      match (coeffs1,coeffs2) with
+      | ([],[]) -> false
+      | ([],_) -> true
+      | (_,[]) -> false
+      | (hd1 :: tl1,hd2 :: tl2) -> 
+        if hd1 = hd2 then less_helper tl1 tl2
+        else if hd1 < hd2 then List.length tl1 <= List.length tl2
+        else List.length tl1 < List.length tl2
+    in 
+    if b1.neg then less_helper b2.coeffs b1.coeffs
+    else less_helper b1.coeffs b2.coeffs
+;;
 
 
 let greater (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
+  if not (b1.neg = b2.neg) then b1.neg
+  else
+    let rec greater_helper (coeffs1 : int list) (coeffs2 : int list) : bool =
+      match (coeffs1,coeffs2) with
+      | ([],[]) -> false
+      | ([],_) -> false
+      | (_,[]) -> true
+      | (hd1 :: tl1,hd2 :: tl2) -> 
+        if hd1 = hd2 then greater_helper tl1 tl2
+        else if hd1 > hd2 then List.length tl1 >= List.length tl2
+        else List.length tl1 > List.length tl2
+    in 
+    if b1.neg then greater_helper b2.coeffs b1.coeffs
+    else greater_helper b1.coeffs b2.coeffs
+;;
 
 
 (*>* Problem 1.3.2 *>*)
 let toInt (b : bignum) : int option =
-  raise ImplementMe
+  let rec makeInt (coeffs : int list) (n : int) : int option =
+    match coeffs with
+    | [] -> Some n
+    | hd :: tl ->
+      if n <= (Int.max_value - 1 - hd) / base
+        then makeInt tl (n * base + hd)
+      else None
+  in
+  match makeInt b.coeffs 0 with
+  | None -> None
+  | Some x ->
+    if b.neg then Some (-x)
+    else Some x
+;;
 
 
 (** Some arithmetic functions **)
@@ -206,7 +253,14 @@ let plus_pos (b1 : bignum) (b2 : bignum) : bignum =
  * Hint: How can you use plus_pos to implement this?
 *)
 let plus (b1 : bignum) (b2 : bignum) : bignum =
-  raise ImplementMe
+  match (b1.neg,b2.neg) with
+  | (false,false) -> plus_pos b1 b2
+  | (true,true) -> negate (plus_pos (negate b1) (negate b2))
+  | _ ->
+    if equal (negate b1) b2 then {neg = false; coeffs = []}
+    else if less (negate b1) b2 then plus_pos b1 b2
+    else negate (plus_pos (negate b1) (negate b2))
+;;
 
 
 (*>* Problem 1.5 *>*)
@@ -232,7 +286,33 @@ let plus (b1 : bignum) (b2 : bignum) : bignum =
  * simplify code, as long as you respect that invariant.
 *)
 let times (b1 : bignum) (b2 : bignum) : bignum =
-  raise ImplementMe
+  let rec list_zero (n : int) (lst : int list) : int list =
+    if n = 0 then lst
+    else list_zero (n-1) (0 :: lst)
+  in
+  let rec int_times (coeffs : int list) (n : int) (offset : int) : int list = 
+    match coeffs with
+    | [] -> list_zero (offset + 1) []
+    | hd :: tl ->
+      let prod = int_times tl n offset in
+      match prod with
+      | [] -> []
+      | p_hd :: p_tl -> 
+        let (q,r) = ((p_hd + n * hd) / base, (p_hd + n * hd) % base) in
+        q :: r :: p_tl
+  in
+  let (prod,_) = List.fold_right
+               b1.coeffs 
+               ~f:(fun (x : int) (accum : bignum * int) ->
+                     let (b,n) = accum in
+                     (plus b {neg = false; 
+                             coeffs = stripzeroes (int_times b2.coeffs x n)},
+                      n+1))
+               ~init:({neg = false; coeffs = []},0)
+  in
+  if b1.neg = b2.neg then prod
+  else negate prod
+;;
 
 
 (* Returns a bignum representing b/n, where n is an integer less than base *)
