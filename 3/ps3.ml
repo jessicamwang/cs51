@@ -104,7 +104,7 @@ let fromString (s : string) : bignum =
     | h :: t -> if h = '-' || h = '~' then
         {neg = true; coeffs = (List.rev (fromString_rec (List.rev t)))}
       else {neg = false;
-            coeffs = (List.rev (fromString_rec (List.rev (h :: t))))}
+            coeffs = stripzeroes (List.rev (fromString_rec (List.rev (h :: t))))}
 
 
 (* Converts a bignum to its string representation.
