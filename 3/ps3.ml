@@ -6,14 +6,12 @@ type bignum = {neg: bool; coeffs: int list}
 let base = 10
 
 (*>* Problem 1.1 *>*)
+(* negate: negates a bignum *)
 let negate (b : bignum) : bignum =
   if b.coeffs = [] then b
   else {neg = not b.neg; coeffs = b.coeffs}
 ;;
 
-(* Sample negate tests: more exhaustive testing for all other functions
- * is required. (An example of such testing is test_equals below).
- * We only allow the positive representation of 0 *)
 let _ = assert(negate {neg = false; coeffs = []}
                     = {neg = false; coeffs = []})
 let _ = assert(negate {neg = true; coeffs = [1; 2]}
@@ -21,6 +19,7 @@ let _ = assert(negate {neg = true; coeffs = [1; 2]}
 
 
 (*>* Problem 1.3.1 *>*)
+(* fromInt: takes an int and returns the number as a bignum *)
 let fromInt (n: int) : bignum =
   let rec to_base (num : int) (coeffs : int list) : int list =
     if num = 0 then coeffs
@@ -29,6 +28,30 @@ let fromInt (n: int) : bignum =
   if n < 0 then {neg = true; coeffs = to_base (-n) []}
   else {neg = false; coeffs = to_base n []}
 ;;
+
+(* (* base 16 *)
+let base = 16
+let fromInt (n: int) : bignum =
+  let rec to_base (num : int) (coeffs : int list) : int list =
+    if num = 0 then coeffs
+    else to_base (num / base) ((num % base) :: coeffs)
+  in
+  if n < 0 then {neg = true; coeffs = to_base (-n) []}
+  else {neg = false; coeffs = to_base n []}
+;;
+let _ = assert((fromInt 0) = {neg = false; coeffs = []});;
+let _ = assert((fromInt 1) = {neg = false; coeffs = [1]});;
+let _ = assert((fromInt 7684) = {neg = false; coeffs = [1;14;0;4]});;
+let _ = assert((fromInt (-1)) = {neg = true; coeffs = [1]});;
+let _ = assert((fromInt (-19764)) = {neg = true; coeffs = [4;13;3;4]});; *)
+
+(* base 10 *)
+let base = 10
+let _ = assert((fromInt 0) = {neg = false; coeffs = []});;
+let _ = assert((fromInt 1) = {neg = false; coeffs = [1]});;
+let _ = assert((fromInt 7684) = {neg = false; coeffs = [7;6;8;4]});;
+let _ = assert((fromInt (-1)) = {neg = true; coeffs = [1]});;
+let _ = assert((fromInt (-19764)) = {neg = true; coeffs = [1;9;7;6;4]});;
 
 
 (** Some helpful functions **)
@@ -131,30 +154,25 @@ let toString (b : bignum) : string =
 
 
 (*>* Problem 1.2 *>*)
-let rec equal (b1 : bignum) (b2 : bignum) : bool =
+(* equal: tests if two bignums correspond to the same number *)
+let equal (b1 : bignum) (b2 : bignum) : bool =
   b1 = b2
 ;;
 
-
-(* Automated testing function. Use this function to help you catch potential
- * edge cases. While this kind of automated testing is helpful, it is still
- * important for you to think about what cases may be difficult for your
- * algorithm. Also, think about what inputs to run the testing function on. If
- * you're having trouble isolating a bug, you can try printing out which values
- * cause an assert failure. *)
 let rec test_equal (count : int) (max : int) : unit =
   if count > max then ()
   else
     let _ = assert(equal (fromInt count) (fromInt max) = (count = max)) in
     test_equal (count + 1) max
 
-
 let () = test_equal (-10000) 10000
 let () = test_equal 10000 (-10000)
 let () = test_equal (-10000) 9999
 
+
+(* less: tests if b1 is less than b2 *)
 let less (b1 : bignum) (b2 : bignum) : bool =
-  if not (b1.neg = b2.neg) then b2.neg
+  if not (b1.neg = b2.neg) then b1.neg
   else
     let rec less_helper (coeffs1 : int list) (coeffs2 : int list) : bool =
       match (coeffs1,coeffs2) with
@@ -170,9 +188,18 @@ let less (b1 : bignum) (b2 : bignum) : bool =
     else less_helper b1.coeffs b2.coeffs
 ;;
 
+let rec test_less (x: int) (y: int) (min : int) (max : int) : unit =
+  if x > max then ()
+  else if y > max then test_less (x + 1) min min max
+  else
+    let _ = assert(less (fromInt x) (fromInt y) = (x < y)) in
+    test_less x (y + 1) min max
 
+let () = test_less (-1000) (-1000) (-1000) 1000
+
+(* greater: tests if b1 is greater than b2 *)
 let greater (b1 : bignum) (b2 : bignum) : bool =
-  if not (b1.neg = b2.neg) then b1.neg
+  if not (b1.neg = b2.neg) then b2.neg
   else
     let rec greater_helper (coeffs1 : int list) (coeffs2 : int list) : bool =
       match (coeffs1,coeffs2) with
@@ -188,8 +215,20 @@ let greater (b1 : bignum) (b2 : bignum) : bool =
     else greater_helper b1.coeffs b2.coeffs
 ;;
 
+let rec test_greater (x: int) (y: int) (min : int) (max : int) : unit =
+  if x > max then ()
+  else if y > max then test_greater (x + 1) min min max
+  else
+    let _ = assert(greater (fromInt x) (fromInt y) = (x > y)) in
+    test_greater x (y + 1) min max
+
+let () = test_greater (-1000) (-1000) (-1000) 1000
+
 
 (*>* Problem 1.3.2 *>*)
+(* toInt: takes a bignum and returns an optional int corresponding to the
+ *        number represented by the bignum, or None if the value of the
+ *        bignum overflows *)
 let toInt (b : bignum) : int option =
   let rec makeInt (coeffs : int list) (n : int) : int option =
     match coeffs with
@@ -205,6 +244,19 @@ let toInt (b : bignum) : int option =
     if b.neg then Some (-x)
     else Some x
 ;;
+
+let rec test_toInt (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(toInt (fromInt count) = Some count) in
+    test_toInt (count + 1) max
+
+let () = test_toInt (-10000) 10000
+let _ = assert(toInt (fromInt Int.max_value) = None)
+let _ = assert(toInt (fromInt (-Int.max_value)) = None)
+let _ = assert(toInt (fromInt (Int.max_value - 1)) = Some (Int.max_value - 1))
+let _ = assert(toInt (fromInt (-Int.max_value + 1)) = Some (-Int.max_value + 1))
+
 
 
 (** Some arithmetic functions **)
@@ -248,10 +300,7 @@ let plus_pos (b1 : bignum) (b2 : bignum) : bignum =
 
 
 (*>* Problem 1.4 *>*)
-(* Returns a bignum representing b1 + b2.
- * Does not make the above assumption.
- * Hint: How can you use plus_pos to implement this?
-*)
+(* plus: returns the sum of any two bignums as a bignum *)
 let plus (b1 : bignum) (b2 : bignum) : bignum =
   match (b1.neg,b2.neg) with
   | (false,false) -> plus_pos b1 b2
@@ -261,6 +310,16 @@ let plus (b1 : bignum) (b2 : bignum) : bignum =
     else if less (negate b1) b2 then plus_pos b1 b2
     else negate (plus_pos (negate b1) (negate b2))
 ;;
+
+let rec test_plus (x: int) (y: int) (min : int) (max : int) : unit =
+  if x > max then ()
+  else if y > max then test_plus (x + 1) min min max
+  else
+    let _ = assert(plus (fromInt x) (fromInt y) = fromInt (x + y)) in
+    test_plus x (y + 1) min max
+
+let () = test_plus (-1000) (-1000) (-1000) 1000
+
 
 
 (*>* Problem 1.5 *>*)
@@ -302,17 +361,26 @@ let times (b1 : bignum) (b2 : bignum) : bignum =
         q :: r :: p_tl
   in
   let (prod,_) = List.fold_right
-               b1.coeffs 
-               ~f:(fun (x : int) (accum : bignum * int) ->
-                     let (b,n) = accum in
-                     (plus b {neg = false; 
-                             coeffs = stripzeroes (int_times b2.coeffs x n)},
-                      n+1))
-               ~init:({neg = false; coeffs = []},0)
+                 b1.coeffs 
+                 ~f:(fun (x : int) (accum : bignum * int) ->
+                       let (b,n) = accum in
+                       (plus b {neg = false; 
+                               coeffs = stripzeroes (int_times b2.coeffs x n)},
+                        n+1))
+                 ~init:({neg = false; coeffs = []},0)
   in
   if b1.neg = b2.neg then prod
   else negate prod
 ;;
+
+let rec test_times (x: int) (y: int) (min : int) (max : int) : unit =
+  if x > max then ()
+  else if y > max then test_times (x + 1) min min max
+  else
+    let _ = assert(times (fromInt x) (fromInt y) = fromInt (x * y)) in
+    test_times x (y + 1) min max
+
+let () = test_times (-1000) (-1000) (-1000) 1000
 
 
 (* Returns a bignum representing b/n, where n is an integer less than base *)
@@ -357,7 +425,7 @@ let divmod (b1 : bignum) (b2 : bignum): bignum * bignum =
   divmod_rec (clean b1) (clean b2) (fromInt 0)
 
 
-(**************************** Challenge 1: RSA ******************************)
+(* (**************************** Challenge 1: RSA ******************************)
 
 (** Support code for RSA **)
 (* Hint: each part of this problem can be implemented in approximately one
@@ -430,9 +498,9 @@ let rec generateRandomPrime (min : bignum) (max: bignum) : bignum =
 
 (** Code for encrypting and decrypting messages using RSA **)
 
-(* Generate a random RSA key pair, returned as (e, d, n).
+Generate a random RSA key pair, returned as (e, d, n).
  * p and q will be between 2^n and 2^(n+1).
- * Recall that (n, e) is the public key, and (n, d) is the private key. *)
+ * Recall that (n, e) is the public key, and (n, d) is the private key.
 let rec generateKeyPair (r : bignum) : bignum * bignum * bignum =
   let c1 = fromInt 1 in
   let c2 = fromInt 2 in
@@ -516,6 +584,6 @@ let decrypt (n : bignum) (d : bignum) (m : bignum list) =
 (* Returns a bignum representing b1*b2 *)
 let times_faster (b1 : bignum) (b2 : bignum) : bignum =
   raise ImplementMe
+ *)
 
-
-let minutes_spent = raise ImplementMe
+let minutes_spent = 300
