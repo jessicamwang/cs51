@@ -14,45 +14,38 @@ sig
     val max : float list -> float option
 end
 
-(* Write a module called Math that implements the MATH signature above 
- * We have started the module for you below*)
-
+(* Math: contains functions to compute cos, sin, sum, and max *)
 module Math: MATH =
 struct
-   let pi = acos (-1.)
-   let cos = cos
-   let sin = sin
-   let sum (x : float) (y : float) = x +. y
-   let max (x : float list) = 
+    let pi = acos (-1.)
+    let cos = cos
+    let sin = sin
+    let sum = (+.)
+    let max (x : float list) = 
       match x with 
-      |[] -> None
-      |_ -> Some (List.fold_right x ~f:(fun x m -> if x < m then m
-                                              else x) ~init: Float.min_value)                                         
+      | [] -> None
+      | _ -> Some (List.fold_right x ~f:(fun x m ->
+                                           if x < m then m else x) 
+                                     ~init: Float.min_value)
 end
 
 let _ =
     assert(Math.pi = (acos (-1.)));
     assert(Math.cos 0.7 = cos 0.7);
-    assert(Math.sin 1.3 = cos 1.3);
+    assert(Math.sin 1.3 = sin 1.3);
     assert(Math.sum (-0.832) 1.765 = (-0.832) +. 1.765)
     assert(Math.max [] = None);
     assert(Math.max [0.8;1.75;2.348;-0.943;7.546;-1.74] = Some 7.546)
 
+
 (*>* Problem 1.1 *>*)
 
-(*
- * Write a signature called LIST that only exposes the functions length,
- * fold_right, and rev. The Core.Std.List documentation might be helpful:
- * https://ocaml.janestreet.com/ocaml-core/109.60.00/doc/core/#Std.List
- * We have given you the beginnings of the signature below. 
-*)
-
-
+(* LIST: contains functions for length, fold_right, and rev for lists *)
 module type LIST =
 sig
-  val length : 'a list -> int
-  val fold_right : 'a list -> f:('a -> 'b -> 'b) -> init:'b -> 'b
-  val rev : 'a list -> 'a list
+    val length : 'a list -> int
+    val fold_right : 'a list -> f:('a -> 'b -> 'b) -> init:'b -> 'b
+    val rev : 'a list -> 'a list
 end
 
 module MyList = (List : LIST);;
@@ -61,12 +54,6 @@ let _ =
     assert(MyList.length [1;2;3] = 3);
     assert(MyList.fold_right ~f:(+) ~init:0 [1;2;3] = 6);
     assert(MyList.rev [1;2;3] = [3;2;1])
-
-(* Even with your signature, the following line should never compile:
-
-MyList.fold_left ~f:(+) ~init:0 [1;2;3]
-
-*)
 
 
 (*>* Problem 1.2 *>*)
@@ -150,9 +137,8 @@ struct
 
 end
 
-(* Write a signature TF that exposes as much of *both* Ben
- * and Allison as possible. *)
- 
+
+(* TF: contains specific information about a TF *)
 module type TF =
 sig
     type info
@@ -163,45 +149,12 @@ sig
     val print_info : unit -> unit
 end
 
-module type TF =
-sig
-    type info = {
-        hometown : string;
-        house : 'a;
-        year : int;
-        concentration : string
-    }
-hometown str
-house house
-fold f ->
-info info
-grade_assignment ->
-favorite_function ->
-print_info
-
-
-end
-
-
-(* The follow should work after you define the TF signature *)
-
 module TFBen = (Ben : TF)
 module TFAllison = (Allison : TF)
 
 
 (*>* Problem 1.3 *>*)
 
-(* Challenge (worth 1 point)!
-
- * Write another module that matches sig TF. Try to fill
- * in the info of your own TF! If you don't have a TF, or
- * your TF is already listed here, then feel free to
- * create a module for Henry, Jesse, or yourself.
- *
- * You should not trivially reuse any of the same values as
- * were used above in order to implement the module.
- *)
- 
 module Jefferson =
 struct
     type info = {
