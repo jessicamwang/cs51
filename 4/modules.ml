@@ -152,6 +152,16 @@ end
 
 (* Write a signature TF that exposes as much of *both* Ben
  * and Allison as possible. *)
+ 
+module type TF =
+sig
+    type info
+    val info : info
+    val favorite_function : float -> float -> float 
+    val hometown : string
+    val fold : int list -> init:int -> int
+    val print_info : unit -> unit
+end
 
 module type TF =
 sig
@@ -174,10 +184,10 @@ end
 
 
 (* The follow should work after you define the TF signature *)
-(*
+
 module TFBen = (Ben : TF)
 module TFAllison = (Allison : TF)
-*)
+
 
 (*>* Problem 1.3 *>*)
 
@@ -191,3 +201,35 @@ module TFAllison = (Allison : TF)
  * You should not trivially reuse any of the same values as
  * were used above in order to implement the module.
  *)
+ 
+module Jefferson =
+struct
+    type info = {
+        hometown : string;
+        year : int;
+        concentration : string;
+        house : string
+    }
+
+    let hometown = "Canadaigua, TX"
+    let year = 2016
+    let concentration = "Computer Science"
+    let house = "Lowell"
+
+    let info = {
+        hometown;
+        year;
+        concentration;
+        house
+    }
+
+    let fold = List.fold_left ~f:(+)
+    let favorite_function _ = failwith "I don't have a favorite function"
+
+    let print_info = fun _ ->
+        print_string (info.house ^ "\n" ^ info.hometown ^ "\n" ^
+            string_of_int info.year ^ "\n" ^ info.concentration)
+
+end
+
+module TFJefferson = (Jefferson : TF)
