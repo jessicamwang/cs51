@@ -494,13 +494,54 @@ struct
   match q with 
   |[] -> raise QueueEmpty
   |hd::tl -> (hd, tl)
-    
+  
 
-  let run_tests () = raise ImplementMe
+  let test_add () =
+    let x = C.generate () in
+    let q = add x empty in
+    assert (q = [x]);
+    let y = C.generate_gt x () in
+    let q = add y q in
+    assert (q = [x;y]);
+    let z = C.generate_lt x () in
+    let q = add z q in
+    assert (q = [z;x;y]);
+    let q = add x q in
+    assert (q = [z;x;x;y]);
+    ()
+
+  let test_take () =
+    let x = C.generate () in
+    let q = add x empty in
+    assert (take q = (x,[]));
+    let y = C.generate_gt x () in
+    let q = add y q in
+    assert (take q = (x,[y]));
+    let z = C.generate_lt x () in
+    let q = add z q in
+    assert (take q = (z,[x;y]));
+    let q = add x q in
+    assert (take q = (z,[x;x;y]));
+    ()
+
+  let test_is_empty () =
+    let q = empty in
+    assert (is_empty q);
+    let q = add (C.generate ()) q in
+    assert (not (is_empty q));
+    ()
+
+  let run_tests () = 
+    test_add ();
+    test_take ();
+    test_is_empty ();
+    ()
 end
 
-(* IMPORTANT: Don't forget to actually *call* run_tests, as with
- * IntTree above! *)
+module IntLQueue = ListQueue(IntCompare)
+
+let _ = IntLQueue.run_tests ()
+
 
 (*>* Problem 3.5 *>*)
 
@@ -546,9 +587,52 @@ struct
 
   (* Run invariant checks on the implementation of this binary tree.
    * May raise Assert_failure exception *)
-  let run_tests =
-    T.run_tests
+  let test_add () =
+    let x = C.generate () in
+    let q = add x empty in
+    assert (q = (T.insert x empty));
+    let y = C.generate_gt x () in
+    let q = add y q in
+    assert (q = (T.insert y (T.insert x empty)));
+    let z = C.generate_lt x () in
+    let q = add z q in
+    assert (q = (T.insert z (T.insert y (T.insert x empty))));
+    let q = add x q in
+    assert (q = (T.insert x (T.insert z (T.insert y (T.insert x empty)))));
+    ()
+
+  let test_take () =
+    let x = C.generate () in
+    let q = add x empty in
+    assert (take q = (x,empty));
+    let y = C.generate_gt x () in
+    let q = add y q in
+    assert (take q = (x,T.insert y empty));
+    let z = C.generate_lt x () in
+    let q = add z q in
+    assert (take q = (z,T.insert y (T.insert x empty)));
+    let q = add z q in
+    assert (take q = (z,T.insert z (T.insert y (T.insert x empty))));
+    ()
+
+  let test_is_empty () =
+    let q = empty in
+    assert (is_empty q);
+    let q = add (C.generate ()) q in
+    assert (not (is_empty q));
+    ()
+
+  let run_tests () = 
+    test_add ();
+    test_take ();
+    test_is_empty ();
+    ()
 end
+
+module IntTQueue = TreeQueue(IntCompare)
+
+let _ = IntTQueue.run_tests ()
+
 
 (*****************************************************************************)
 (*                               Part 4                                      *)
