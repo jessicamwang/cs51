@@ -164,7 +164,7 @@ struct
         house : string
     }
 
-    let hometown = "Canadaigua, TX"
+    let hometown = "Canadaigua, NY"
     let year = 2016
     let concentration = "Computer Science"
     let house = "Lowell"
@@ -181,8 +181,8 @@ struct
 
     let print_info = fun _ ->
         print_string (info.house ^ "\n" ^ info.hometown ^ "\n" ^
-            string_of_int info.year ^ "\n" ^ info.concentration)
-
+            string_of_int info.year ^ "\n" ^ info.concentration ^
+            "Jefferson lovveeeesss lillies")
 end
 
 module TFJefferson = (Jefferson : TF)
