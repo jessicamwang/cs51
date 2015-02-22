@@ -825,7 +825,38 @@ struct
        | Empty -> (e, Tree (fix (OneBranch (last, get_top t2))))
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
-  let run_tests () = raise ImplementMe
+
+
+
+  let test_add () =
+    
+
+  let test_is_empty () =
+    let h = empty in
+    assert (is_empty h);
+    let h = add (C.generate ()) h in
+    assert (not (is_empty h));
+    ()
+    
+
+  let test_get_top () =
+
+  let test_fix () =
+
+  let test_extract_tree () =
+
+  let test_get_last () =
+
+  let test_take () =
+
+  let run_tests () = 
+    test_add ()
+    test_is_empty ()
+    test_get_top ()
+    test_fix ()
+    test_extract_tree ()
+    text_get_last ()
+    text_take ()
 end
 
 
@@ -923,4 +954,4 @@ let selectionsort = sort list_module
  * See the Sys module for functions related to keeping track of time *)
 
 (*>* Problem N.2 *>*)
-let minutes_spent : int = raise ImplementMe
+let minutes_spent : int = 750
