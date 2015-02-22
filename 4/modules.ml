@@ -30,6 +30,13 @@ struct
                                               else x) ~init: Float.min_value)                                         
 end
 
+let _ =
+    assert(Math.pi = (acos (-1.)));
+    assert(Math.cos 0.7 = cos 0.7);
+    assert(Math.sin 1.3 = cos 1.3);
+    assert(Math.sum (-0.832) 1.765 = (-0.832) +. 1.765)
+    assert(Math.max [] = None);
+    assert(Math.max [0.8;1.75;2.348;-0.943;7.546;-1.74] = Some 7.546)
 
 (*>* Problem 1.1 *>*)
 
@@ -145,6 +152,26 @@ end
 
 (* Write a signature TF that exposes as much of *both* Ben
  * and Allison as possible. *)
+
+module type TF =
+sig
+    type info = {
+        hometown : string;
+        house : 'a;
+        year : int;
+        concentration : string
+    }
+hometown str
+house house
+fold f ->
+info info
+grade_assignment ->
+favorite_function ->
+print_info
+
+
+end
+
 
 (* The follow should work after you define the TF signature *)
 (*
