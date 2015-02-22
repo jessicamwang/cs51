@@ -509,7 +509,7 @@ struct
     let q = add x q in
     assert (q = [z;x;x;y]);
     ()
-
+(* DO SAME PRIORITY *)
   let test_take () =
     let x = C.generate () in
     let q = add x empty in
@@ -736,9 +736,7 @@ struct
    * match in *)
   let get_top (t : tree) : elt = 
      match t with
-      | Leaf e1 -> e1
-      | OneBranch(e1, _) -> e1
-      | TwoBranch(_, e1, _, _) -> e1
+      | Leaf e1 | OneBranch(e1, _) | TwoBranch(_, e1, _, _) -> e1
 
   (* Takes a tree, and if the top node is greater than its children, fixes
    * it. If fixing it results in a subtree where the node is greater than its
@@ -829,7 +827,7 @@ struct
 
 
   let test_add () =
-    
+
 
   let test_is_empty () =
     let h = empty in
