@@ -154,7 +154,6 @@ module TFAllison = (Allison : TF)
 
 
 (*>* Problem 1.3 *>*)
-
 module Jefferson =
 struct
     type info = {

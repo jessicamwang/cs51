@@ -3,17 +3,7 @@
  * Partner: Jessica Wang
  *)
 
-(* NOTE: Please read (and understand) all of the comments in this file! 
- * As well, COMMIT OFTEN! This pset can be pretty difficult in that it 
- * may stop compiling at points if you are approaching something in the wrong way. 
- * If that happens, you want to be able to get it back to a point where it compiled. 
- * COMMIT, COMMIT, COMMIT! *)
-
 open Core.Std
-
-(* Things related to the TreeQueue module in this file are commented out
- * because this file would not compile otherwise. Please uncomment them as you
- * get to them. *)
 
 exception ImplementMe
 
@@ -78,10 +68,6 @@ sig
   val compare : t -> t -> order
   val to_string : t -> string
 
-  (* See the testing.ml for an explanation of
-   * what these "generate*" functions do, and why we included them in
-   * this signature. *)
-
   (* Generate a value of type t *)
   val generate: unit -> t
 
@@ -142,40 +128,16 @@ struct
     if higher - lower < 2 then None else Some (higher - 1, s2)
 end
 
-(* BinSTree is a *functor*, which takes an argument C which is a module
- * that implements the COMPARABLE signature. BinSTree ultimately
- * must return a module which matches the BINTREE signature.
- * We can do further abstraction by specifying a signature for
- * the functor, but won't do that here.
- *
- * Now that we are passing in a COMPARABLE module, which separately
- * defines a type and comparison for that type, we can just implement something
- * matching BINTREE's signature in terms of that type and comparison function,
- * and can wait until later to actually say what that type and comparison
- * function are.
- *
- * Here, you'll fill in the implementation of a binary search tree. Unlike a
- * usual binary search tree, this implementation keeps a list with each node in
- * the tree that contains each instance of the value inserted into the tree. For
- * example, if the integer 3 is inserted into an Int BinSTree 5 times, then
- * there will be a node with [3;3;3;3;3] in the tree, and the node will only be
- * removed after 5 deletions on 3 (assuming no further intermediate insertions
- * of 3).
- *)
-
+(* BinSTree: takes a module which implements the COMPARABLE signature.
+ * Returns a binary search tree module which matches the BINTREE signature.
+ * This implementation keeps a list with each node that contains each instance
+ * of the value inserted into the tree. *)
 module BinSTree(C : COMPARABLE) : BINTREE with type elt = C.t =
 struct
-  (* Inside of here, you can use C.t to refer to the type defined in
-   * the C module (which matches the COMPARABLE signature), and
-   * C.compare to access the function which compares elements of type
-   * C.t
-   *)
+
   exception EmptyTree
   exception NodeNotFound
 
-  (* Grab the type of the tree from the module C that's passed in
-   * this is the only place you explicitly need to use C.t; you
-   * should use elt everywhere else *)
   type elt = C.t
 
   (* One possible type for a tree *)
@@ -187,15 +149,10 @@ struct
 
 (*>* Problem 2.0 *>*)
 
-  (* Define a method to insert element x into the tree t.
-   * The left subtree of a given node should only have "smaller"
-   * elements than that node, while the right subtree should only have
-   * "greater". Remember that "equal" elements should all be stored in
-   * a list. *The most recently inserted elements should be at the front
-   * of the list* (this is important for later).
-   *
-   * Hint: use C.compare. See delete for inspiration
-   *)
+  (* insert: inserts element x into the tree t, ensuring that all nodes to the
+   * left of a given node have smaller values than that node and all nodes to
+   * right of a given node have greater values than that node. The most 
+   * recently inserted elements are at the front of the list. *)
   let rec insert (x : elt) (t : tree) : tree = 
     match t with
     | Leaf -> Branch (empty, [x], empty)
@@ -204,18 +161,13 @@ struct
       | [] -> failwith "Invalid tree: empty list as node"
       | hd::_ ->
         match C.compare x hd with
-        | Less -> Branch (insert x l, lst, r)
         | Equal -> Branch (l, x::lst, r)
+        | Less -> Branch (insert x l, lst, r)
         | Greater -> Branch (l, lst, insert x r)
-  ;;
 
 (*>* Problem 2.1 *>*)
 
-  (* Returns true if the element x is in tree t, else false *)
-  (* Hint: multiple values might compare Equal to x, but
-   * that doesn't necessarily mean that x itself is in the
-   * tree.
-   *)
+  (* search: returns true if the element x is in tree t, else false *)
   let rec search (x : elt) (t : tree) : bool = 
     match t with
     | Leaf -> false
@@ -224,27 +176,12 @@ struct
       | [] -> failwith "Invalid tree: empty list as node"
       | hd::_ ->
         match C.compare x hd with
-        | Less -> search x l
         | Equal -> List.exists ~f:(fun y -> y = x) lst
+        | Less -> search x l
         | Greater -> search x r
-  ;;
 
-  (* A useful function for removing the node with the minimum value from
-   * a binary tree, returning that node and the new tree.
-   *
-   * Notice that the pull_min function is not defined in the signature BINTREE.
-   * When you're working on a structure that implements a signature like
-   * BINTREE, you are free to write "helper" functions for your implementation
-   * (such as pull_min) that are not defined in the signature.  Note, however,
-   * that if a function foo IS defined in a signature BAR, and you attempt to
-   * make a structure satisfying the signature BAR, then you MUST define the
-   * function foo in your structure.  Otherwise the compiler will complain that
-   * your structure does not, in fact, satisfy the signature BAR (but you claim
-   * that it does).
-   * So, if it's in the signature, it needs to be in the structure.  But if
-   * it's in the structure, it doesn't necessarily need to show up in the
-   * signature.
-   *)
+  (* pull_min: removes the node with minimum value from a binary search tree,
+   * returning that node and the new tree. *)
   let rec pull_min (t : tree) : elt list * tree =
     match t with
     | Leaf -> raise EmptyTree
@@ -252,8 +189,8 @@ struct
     | Branch (l, v, r) -> let min, t' = pull_min l in (min, Branch (t', v, r))
 
 
-  (* Removes an element from the tree. If multiple elements are in the list,
-   * removes the one that was inserted first.  *)
+  (* delete: removes an element from the tree. If multiple elements are in the
+   * list, removes the one that was inserted first. *)
   let rec delete (x : elt) (t : tree) : tree =
     match t with
     | Leaf -> raise NodeNotFound
@@ -278,54 +215,41 @@ struct
 
 (*>* Problem 2.2 *>*)
 
-  (* Simply returns the minimum value of the tree t. If there are multiple
-   * minimum values, it should return the one that was inserted first (note
-   * that, even though the list might look like [3;3;3;3;3], you should
-   * return the *last* 3 in the list. This is because we might pass in
-   * a module to this functor that defines a type and comparison function
-   * where each element in the list *is* distinct, but are Equal
-   * from the perspective of the comparison function (like IntStringCompare).
-   *
-   * The exception "EmptyTree", defined within this module, might come in
-   * handy. *)
-
+  (* getmin: returns the minimum value in a binary search tree. If multiple
+   * minimum values exists, returns the one that was inserted first *)
   let getmin (t : tree) : elt = 
-    let (lst,_) = pull_min t in
+    let (lst, _) = pull_min t in
     match List.rev lst with 
-    |[] -> failwith "Invalid tree: empty list as node"
-    |hd::_ -> hd
-  ;;
-
+    | [] -> failwith "Invalid tree: empty list as node"
+    | hd::_ -> hd
   
 (*>* Problem 2.3 *>*)
 
-  (* Simply returns the maximum value of the tree t. Similarly should
+  (* getmax: returns the maximum value of the tree t. Similarly should
    * return the last element in the matching list. *)
   let rec getmax (t : tree) : elt = 
     match t with 
     | Leaf -> raise EmptyTree
     | Branch (_, v, Leaf) -> 
        (match List.rev v with 
-        |[] -> failwith "Invalid tree: empty list as node"
-        |hd::_ -> hd )
+        | [] -> failwith "Invalid tree: empty list as node"
+        | hd::_ -> hd)
     | Branch (_, _, r) -> getmax r
-  ;;
 
-
+  (* Inserts elements and checks to make sure the tree structure is correct *)
   let test_insert () =
     let x = C.generate () in
     let t = insert x empty in
-    assert (t = Branch(Leaf, [x], Leaf));
+    assert (t = Branch (Leaf, [x], Leaf));
     let t = insert x t in
-    assert (t = Branch(Leaf, [x;x], Leaf));
+    assert (t = Branch (Leaf, [x;x], Leaf));
     let y = C.generate_gt x () in
     let t = insert y t in
-    assert (t = Branch(Leaf, [x;x], Branch(Leaf, [y], Leaf)));
+    assert (t = Branch (Leaf, [x;x], Branch(Leaf, [y], Leaf)));
     let z = C.generate_lt x () in
     let t = insert z t in
-    assert (t = Branch(Branch(Leaf, [z], Leaf),[x;x],
-                Branch(Leaf, [y], Leaf)));
-    (* Can add further cases here *)
+    assert (t = Branch (Branch(Leaf, [z], Leaf),[x;x],
+                Branch (Leaf, [y], Leaf)));
     ()
 
   (* Insert a bunch of elements, and test to make sure that we
@@ -353,13 +277,6 @@ struct
     in
     List.iter ~f:(fun value -> assert (search value full_tree)) values_inserted
 
-  (* None of these tests are particularly exhaustive.
-   * For instance, we could try varying the order in which we insert
-   * values, and making sure that the result is still correct.
-   * So, the strategy here is more to try to build up a reasonable degree
-   * of coverage across the various code-paths, rather than it is to
-   * test exhaustively that our code does the right thing on every single
-   * possible input. *)
   let test_getmax () =
     let x = C.generate () in
     let x2 = C.generate_lt x () in
@@ -392,34 +309,15 @@ struct
 
 end
 
-(* Here is how you would define an int binary tree using the BinSTree
- * functor, which expects a module to be passed in as an argument.
- * You should write tests using the IntTree module (or you can
- * give the module a different type), and you should use
- * this call to a functor as an example for how to test modules further
- * down in the pset.
- *)
-
 module IntTree = BinSTree(IntCompare)
 
-(* Please read the entirety of "testing.ml" for an explanation of how
- * testing works.
- *)
 let _ = IntTree.run_tests ()
 
 (*****************************************************************************)
 (*                               Part 3                                      *)
 (*****************************************************************************)
 
-(* A signature for a priority queue. See the pset specification on the
- * course website and section notes for week 4
- * for more information if you are unfamiliar with priority queues.
- *
- * IMPORTANT: In your implementations of priority queues, the MINIMUM
- * valued element corresponds to the HIGHEST priority. For example,
- * in just an int prioqueue, the integer 4 has lower priority than
- * the integer 2.
- *)
+(* A signature for a priority queue. *)
 module type PRIOQUEUE =
 sig
   exception QueueEmpty
@@ -452,14 +350,10 @@ end
 
 (*>* Problem 3.0 *>*)
 
-(* Implement a priority queue using lists
- * You can use OCaml's built-in lists (i.e. [] and ::)
- * You are also free to use anything from the List module,
- *)
+(* ListQueue: list-backed implementation of a priority queue *)
 module ListQueue(C : COMPARABLE) : PRIOQUEUE with type elt = C.t =
 struct
-  (* Remember to use the "C" (COMPARABLE) module! You may want to
-   * look above at BinSTree for inspiration *)
+
   exception QueueEmpty
 
   type elt = C.t
@@ -475,25 +369,25 @@ struct
 
 (*>* Problem 3.3 *>*)
 
-  (* Like with getmin and getmax in your binary tree, you should implement
-   * add and take such that, if all elements have the same priority, this
-   * module simply becomes a regular queue (i.e., elements inserted earlier
-   * should be removed before elements of the same priority inserted later)
-   *)
-   
+  (* add: adds the element to the list priority queue. If there are multiple
+   * elements which compare equal, the most recently added element comes
+   * later in the list *)
   let rec add (e : elt) (q : queue) = 
     match q with 
-    |[] -> [e]
-    |hd::tl ->
+    | [] -> [e]
+    | hd::tl ->
       match C.compare e hd with
-      |Less -> e::q
-      |_ -> hd::(add e tl)
+      | Less -> e::q
+      | _ -> hd::(add e tl)
     
 (*>* Problem 3.4 *>*)
+
+  (* take: removes the element with highest priority from the list priority 
+   * queue *)
   let take (q : queue) = 
   match q with 
-  |[] -> raise QueueEmpty
-  |hd::tl -> (hd, tl)
+  | [] -> raise QueueEmpty
+  | hd::tl -> (hd, tl)
   
 
   let test_add () =
@@ -506,22 +400,26 @@ struct
     let z = C.generate_lt x () in
     let q = add z q in
     assert (q = [z;x;y]);
-    let q = add x q in
-    assert (q = [z;x;x;y]);
+    let w = C.generate () in
+    let q = add w q in
+    assert (q = [z;x;w;y]);
     ()
-(* DO SAME PRIORITY *)
+
   let test_take () =
     let x = C.generate () in
     let q = add x empty in
-    assert (take q = (x,[]));
+    assert (take q = (x, []));
+    let w = C.generate () in
+    let q = add w q in
+    assert (take q = (x, [w]));
     let y = C.generate_gt x () in
     let q = add y q in
-    assert (take q = (x,[y]));
+    assert (take q = (x, [w;y]));
     let z = C.generate_lt x () in
     let q = add z q in
-    assert (take q = (z,[x;y]));
+    assert (take q = (z, [x;w;y]));
     let q = add x q in
-    assert (take q = (z,[x;x;y]));
+    assert (take q = (z, [x;w;x;y]));
     ()
 
   let test_is_empty () =
@@ -531,6 +429,8 @@ struct
     assert (not (is_empty q));
     ()
 
+  (* run_tests: run invariant checks on this implementation of the list
+   * priority queue *)
   let run_tests () = 
     test_add ();
     test_take ();
@@ -545,15 +445,11 @@ let _ = IntLQueue.run_tests ()
 
 (*>* Problem 3.5 *>*)
 
-(* Now implement a priority queue using a Binary Search Tree.
- * Luckily, you should be able to use *a lot* of your code from above! *)
- 
+(* TreeQueue: tree-backed implementation of a priority queue *)
 module TreeQueue(C : COMPARABLE) : PRIOQUEUE with type elt = C.t=
 struct
   exception QueueEmpty
 
-  (* You can use the module T to access the functions defined in BinSTree,
-   * e.g. T.insert *)
   module T = (BinSTree(C) : (BINTREE with type elt = C.t))
   
   (* What's being stored in the priority queue *)
@@ -565,28 +461,24 @@ struct
   (* Returns an empty queue *)
   let empty = T.empty
 
-  (* Takes a queue, and returns whether or not it is empty *)
+  (* is_empty: takes a queue, and returns whether or not it is empty *)
   let is_empty (t : queue) : bool =
      t = empty
     
 
-  (* Takes an element and a queue, and returns a new queue with the
+  (* add: takes an element and a queue, and returns a new queue with the
    * element added *)
   let add (e : elt) (t : queue) : queue =
      T.insert e t
 
-  (* Pulls the highest priority element out of the passed-in queue,
-   * also returning the queue with that element
-   * removed. Can raise the QueueEmpty exception. *)
+  (* take: pulls the highest priority element out of the passed-in queue,
+   * also returning the queue with that element removed. Can raise the
+   * QueueEmpty exception. *)
   let take (t : queue) : elt * queue =
     let m = T.getmin t in
     (m, T.delete m t)
 
 
-
-
-  (* Run invariant checks on the implementation of this binary tree.
-   * May raise Assert_failure exception *)
   let test_add () =
     let x = C.generate () in
     let q = add x empty in
@@ -622,6 +514,8 @@ struct
     assert (not (is_empty q));
     ()
 
+  (* run_tests: run invariant checks on this implementation of the tree
+   * priority queue *)
   let run_tests () = 
     test_add ();
     test_take ();
@@ -640,17 +534,7 @@ let _ = IntTQueue.run_tests ()
 
 (*>* Problem 4.0 *>*)
 
-(* Now for the good stuff :-) Implement a priority queue using a binary heap.
- * See the pset spec for more info.
- *
- * You should implement a min-heap, i.e. the top of your heap stores the
- * smallest element in the entire heap.
- *
- * Note that, unlike for your tree and list implementations of priority queues,
- * you do *not* need to worry about the order in which elements of equal
- * priority are removed. Yes, this means it's not really a "queue", but
- * it is easier to implement without that restriction.
- *)
+(* BinaryHeap: binary min heap-backed implementation of a priority queue *)
 module BinaryHeap(C : COMPARABLE) : PRIOQUEUE with type elt = C.t =
 struct
 
@@ -658,22 +542,6 @@ struct
 
   type elt = C.t
 
-  (* Be sure to read the pset spec for hints and clarifications.
-   *
-   * Remember the invariants of the tree that make up your queue:
-   * 1) A tree is ODD if its left subtree has 1 more node than its right
-   * subtree. It is EVEN if its left and right subtrees have the same number of
-   * nodes. The tree can never be in any other state. This is the WEAK
-   * invariant, and should never be false.
-   *
-   * 2) All nodes in the subtrees of a node should be *greater* than (or equal
-   * to) the value of that node. This, combined with the previous invariant,
-   * makes a STRONG invariant. Any tree that a user passes in to your module
-   * and receives back from it should satisfy this invariant.  However, in the
-   * process of, say, adding a node to the tree, the tree may intermittently
-   * not satisfy the order invariant. If so, you *must* fix the tree before
-   * returning it to the user.  Fill in the rest of the module below!
-   *)
   (* A node in the tree is either even or odd *)
   type balance = Even | Odd
 
@@ -689,9 +557,10 @@ struct
 
   let empty = Empty
 
-  let is_empty (q : queue) = q = Empty
+  let is_empty (q : queue) =
+    q = Empty
 
-  (* Adds element e to the queue q *)
+  (* add: adds element e to the queue q *)
   let add (e : elt) (q : queue) : queue =
     (* Given a tree, where e will be inserted is deterministic based on the
      * invariants. If we encounter a node in the tree where its value is greater
@@ -732,15 +601,22 @@ struct
     | Empty -> Tree (Leaf e)
     | Tree t -> Tree (add_to_tree e t)
 
-  (* Simply returns the top element of the tree t (i.e., just a single pattern
-   * match in *)
+  (* get_top: returns the top element of the tree t *)
   let get_top (t : tree) : elt = 
-     match t with
+    match t with
       | Leaf e1 | OneBranch(e1, _) | TwoBranch(_, e1, _, _) -> e1
 
-  (* Takes a tree, and if the top node is greater than its children, fixes
-   * it. If fixing it results in a subtree where the node is greater than its
-   * children, then you must (recursively) fix this tree too. *)
+  
+  (* replace_top: replaces the value of the top node in a tree *)
+  let replace_top (e : elt) (t : tree) : tree =
+    match t with
+      | Leaf _ -> Leaf e
+      | OneBranch(_, e2) -> OneBranch(e,e2)
+      | TwoBranch(bal, _, t1, t2) -> TwoBranch(bal, e, t1, t2)
+
+  (* fix: takes a tree, and if the top node is greater than its children, 
+   * fixes it. If fixing it results in a subtree where the node is greater
+   * than its children, then the subtree is recursively fixed *)
   let rec fix (t : tree) : tree = 
      match t with
       | Leaf _ -> t
@@ -749,53 +625,43 @@ struct
          | Equal | Less -> t
          | Greater -> OneBranch(e2, e1))
       | TwoBranch(bal, e1, t1, t2) ->
-        (match (C.compare e1 (get_top t1), 
-                C.compare e1 (get_top t2), 
-                C.compare (get_top t1) (get_top t2)) with
+        let top1 = get_top t1 in
+        let top2 = get_top t2 in
+        (match (C.compare e1 top1, C.compare e1 top2, C.compare top1 top2) with
+         (* swap with left child *)
          | (Greater, _, Less) | (Greater, _, Equal) -> 
-             (match t1 with 
-              |Leaf _ -> TwoBranch(bal, get_top t1, Leaf e1, t2)
-              |OneBranch(t1_e1, t1_e2) -> TwoBranch(bal, t1_e1, fix (OneBranch(e1,t1_e2)), t2)
-              |TwoBranch(bal1, t1_e1, t1_t1, t1_t2) -> TwoBranch(bal, t1_e1, fix (TwoBranch(bal1, e1,t1_t1, t1_t2)), t2)
-             )
+             TwoBranch(bal, top1, fix (replace_top e1 t1), t2)
+         (* swap with right child *)
          | (_, Greater, Greater) -> 
-             (match t2 with 
-              |Leaf _ -> TwoBranch(bal, get_top t2, t1, Leaf e1)
-              |OneBranch(t2_e1, t2_e2) -> TwoBranch(bal, t2_e1, t1, fix (OneBranch(e1,t2_e2)))
-              |TwoBranch(bal1, t2_e1, t2_t1, t2_t2) -> TwoBranch(bal, t2_e1, t1, fix (TwoBranch(bal1, e1,t2_t1, t2_t2)))
-             )
+             TwoBranch(bal, top2, t1, fix (replace_top e1 t2))
          | _ -> t)
 
+
+  (* extract_tree: retrieves the tree from a queue *)
   let extract_tree (q : queue) : tree =
     match q with
     | Empty -> raise QueueEmpty
     | Tree t -> t
 
-  (* Takes a tree, and returns the item that was most recently inserted into
-   * that tree, as well as the queue that results from removing that element.
-   * Notice that a queue is returned (since removing an element from just a leaf
-   * would result in an empty case, which is captured by the queue type
-   *
-   * By "item most recently inserted", we don't mean the
-   * most recently inserted *value*, but rather the newest node that was
-   * added to the bottom-level of the tree. If you follow the implementation
-   * of add carefully, you'll see that the newest value may end up somewhere
-   * in the middle of the tree, but there is always *some* value brought
-   * down into a new node at the bottom of the tree. *This* is the node
-   * that we want you to return.
-   *)
+  (* get_last: takes a tree, and returns the item corresponding to the last 
+   * node in the tree, as well as the queue that results from removing that
+   * element. *)
   let rec get_last (t : tree) : elt * queue = 
      match t with 
      | Leaf e1 -> (e1, empty)
      | OneBranch(e1, e2) ->  (e2, Tree (Leaf e1))
-     | TwoBranch(Even, e1, t1, t2) -> let (gl_t2e, gl_t2t) = get_last t2 in
-                                      (gl_t2e, Tree (TwoBranch(Odd, e1, t1, extract_tree gl_t2t))) 
-     | TwoBranch(Odd, e1, t1, t2) -> let (gl_t1e, gl_t1t) = get_last t1 in
-                                      (gl_t1e, Tree (TwoBranch(Even, e1, extract_tree gl_t1t, t2))) 
+     | TwoBranch(Even, e1, t1, t2) -> 
+       let (last, rem) = get_last t2 in
+       if is_empty rem then (last, Tree (OneBranch(e1, get_top t1)))
+       else (last, Tree (TwoBranch(Odd, e1, t1, extract_tree rem))) 
+     | TwoBranch(Odd, e1, t1, t2) -> 
+       let (last, rem) = get_last t1 in
+       if is_empty rem then (last, Tree (OneBranch(e1, get_top t2)))
+       else (last, Tree (TwoBranch(Even, e1, extract_tree rem, t2)))
 
-  (* Implements the algorithm described in the writeup. You must finish this
-   * implementation, as well as the implementations of get_last and fix, which
-   * take uses *)
+  (* take: takes a queue and returns the smallest element in the queue as well
+     as the queue resulting from removing the element (the queue will satisfy
+     the necessary invariants) *)
   let take (q : queue) : elt * queue =
     match extract_tree q with
     (* If the tree is just a Leaf, then return the value of that leaf, and the
@@ -816,25 +682,25 @@ struct
         * a OneBranch *)
        | Empty -> (e, Tree (fix (OneBranch (last, get_top t1))))
        | Tree t2' -> (e, Tree (fix (TwoBranch (Odd, last, t1, t2')))))
-    (* Implement the odd case! *)
     | TwoBranch (Odd, e, t1, t2) -> 
       let (last, q1') = get_last t1 in
       (match q1' with
        | Empty -> (e, Tree (fix (OneBranch (last, get_top t2))))
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
+
   let test_add () =
     let x = C.generate () in
     let q = add x empty in
     assert (q = Tree (Leaf x));
     let q2 = add x q in 
-    assert (q2 = Tree (OneBranch (x,x)));
+    assert (q2 = Tree (OneBranch (x, x)));
     let y = C.generate_gt x () in
     let q3 = add y q in
     assert (q3 = Tree (OneBranch (x, y)));
     let z = C.generate_lt x () in
     let q4 = add z q in
-    assert (q4 = Tree (OneBranch (z,x)));
+    assert (q4 = Tree (OneBranch (z, x)));
     let q5 = add x q2 in 
     assert (q5 = Tree (TwoBranch (Even, x, Leaf x, Leaf x)));
     let q6 = add y q2 in 
@@ -843,21 +709,22 @@ struct
     assert (q7 = Tree (TwoBranch (Even, z, Leaf x, Leaf x)));
     let q8 = Tree (TwoBranch (Even, z, Leaf x, Leaf y)) in
     let q9 = add z q8 in
-    assert (q9 = Tree (TwoBranch (Odd, z, OneBranch (z,x), Leaf y)));
+    assert (q9 = Tree (TwoBranch (Odd, z, OneBranch (z, x), Leaf y)));
     let q10 = add y q8 in
-    assert (q10 = Tree (TwoBranch (Odd, z, OneBranch (x,y), Leaf y))); 
+    assert (q10 = Tree (TwoBranch (Odd, z, OneBranch (x, y), Leaf y))); 
     let zz = C.generate_lt z () in 
     let q11 = add zz q8 in
     assert (q11 = Tree (TwoBranch (Odd, zz, OneBranch (z,x), Leaf y)));
     let q12 = add z q10 in
-    assert (q12 = Tree (TwoBranch (Even, z, OneBranch (x,y), OneBranch (z,y))));
+    assert (q12 = Tree (TwoBranch (Even, z, OneBranch (x, y),
+                                   OneBranch (z, y))));
     let q13 = add x q10 in
-    assert (q13 = Tree (TwoBranch (Even, z, OneBranch (x,y), OneBranch (x,y))));
+    assert (q13 = Tree (TwoBranch (Even, z, OneBranch (x, y),
+                                   OneBranch (x, y))));
     let q14 = add zz q10 in
-    assert (q14 = Tree (TwoBranch (Even, zz, OneBranch (x,y), OneBranch (z,y))));
+    assert (q14 = Tree (TwoBranch (Even, zz, OneBranch (x, y),
+                                   OneBranch (z, y))));
     ()
-
-
 
   let test_is_empty () =
     let h = empty in
@@ -887,26 +754,36 @@ struct
     let x = C.generate () in
     let q = add x empty in 
     assert (fix (extract_tree q) = (extract_tree q));
-    assert (fix (OneBranch(x,x)) = OneBranch(x,x));
+    assert (fix (OneBranch(x, x)) = OneBranch(x, x));
     let y = C.generate_gt x () in 
     let yy = C.generate_gt y () in
-    assert (fix (OneBranch(x,y)) = OneBranch (x,y));
-    assert (fix (OneBranch(y,x)) = OneBranch (x,y));
+    assert (fix (OneBranch(x, y)) = OneBranch (x, y));
+    assert (fix (OneBranch(y, x)) = OneBranch (x, y));
     let zx2 = C.generate_lt x () in
     let zx1 = C.generate_lt zx2 () in
     let z = C.generate_lt zx1 () in 
-    assert (fix (TwoBranch(Even, x, Leaf z, Leaf y)) = TwoBranch(Even, z, Leaf x, Leaf y));
-    assert (fix (TwoBranch(Even, x, Leaf z, Leaf z)) = TwoBranch(Even, z, Leaf x, Leaf z));
-    assert (fix (TwoBranch(Even, x, Leaf y, Leaf z)) = TwoBranch(Even, z, Leaf y, Leaf x));
-    assert (fix (TwoBranch(Odd, x, OneBranch(z,y), Leaf y)) = TwoBranch(Odd, z, OneBranch(x,y), Leaf y));
-    assert (fix (TwoBranch(Odd, x, OneBranch(z,zx1), Leaf y)) = TwoBranch(Odd, z, OneBranch(zx1, x), Leaf y));
-    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z,y))) = TwoBranch(Odd, z, Leaf y, OneBranch (x,y)));
-    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z,zx1))) = TwoBranch(Odd, z, Leaf y, OneBranch(zx1,x)));
-    assert (fix (TwoBranch(Even, x, TwoBranch (Even, z, Leaf zx1, Leaf zx2), TwoBranch (Even, y, Leaf yy, Leaf yy))) = 
-                 TwoBranch(Even, z, fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2)), TwoBranch (Even, y, Leaf yy, Leaf yy)));
-    assert (fix (TwoBranch(Even, x, TwoBranch (Even, y, Leaf yy, Leaf yy), TwoBranch (Even, z, Leaf zx1, Leaf zx2))) = 
-                 TwoBranch(Even, z, TwoBranch (Even, y, Leaf yy, Leaf yy), fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2))));
-   
+    assert (fix (TwoBranch(Even, x, Leaf z, Leaf y)) =
+            TwoBranch(Even, z, Leaf x, Leaf y));
+    assert (fix (TwoBranch(Even, x, Leaf z, Leaf z)) =
+            TwoBranch(Even, z, Leaf x, Leaf z));
+    assert (fix (TwoBranch(Even, x, Leaf y, Leaf z)) =
+            TwoBranch(Even, z, Leaf y, Leaf x));
+    assert (fix (TwoBranch(Odd, x, OneBranch(z, y), Leaf y)) =
+            TwoBranch(Odd, z, OneBranch(x, y), Leaf y));
+    assert (fix (TwoBranch(Odd, x, OneBranch(z, zx1), Leaf y)) =
+            TwoBranch(Odd, z, OneBranch(zx1, x), Leaf y));
+    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z, y))) =
+            TwoBranch(Odd, z, Leaf y, OneBranch (x, y)));
+    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z, zx1))) =
+            TwoBranch(Odd, z, Leaf y, OneBranch(zx1, x)));
+    assert (fix (TwoBranch(Even, x, TwoBranch (Even, z, Leaf zx1, Leaf zx2),
+                           TwoBranch (Even, y, Leaf yy, Leaf yy))) = 
+            TwoBranch(Even, z, fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2)),
+                      TwoBranch (Even, y, Leaf yy, Leaf yy)));
+    assert (fix (TwoBranch(Even, x, TwoBranch (Even, y, Leaf yy, Leaf yy),
+                           TwoBranch (Even, z, Leaf zx1, Leaf zx2))) = 
+            TwoBranch(Even, z, TwoBranch (Even, y, Leaf yy, Leaf yy),
+                      fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2))));
     ()
 
   let test_get_last () =
@@ -919,7 +796,7 @@ struct
     let q3 = add y q2 in
     let q4 = add z q3 in
     assert (get_last (extract_tree q4) = (z, q3));
-    (*assert (get_last (extract_tree q3) = (y, q2));*)
+    assert (get_last (extract_tree q3) = (y, q2));
     assert (get_last (extract_tree q2) = (x, q1));
     assert (get_last (extract_tree q1) = (w, empty));
     ()
@@ -935,11 +812,14 @@ struct
     let q = add z q in
     assert (q = Tree (TwoBranch(Odd, w, OneBranch(x,z), Leaf y)));
     assert (take q = (w, Tree (TwoBranch(Even, x, Leaf z, Leaf y))));
-    assert (take (Tree (TwoBranch(Even, x, Leaf z, Leaf y))) = (x, Tree (OneBranch (y,z))));
+    assert (take (Tree (TwoBranch(Even, x, Leaf z, Leaf y))) =
+            (x, Tree (OneBranch (y,z))));
     assert (take (Tree (OneBranch (y,z))) = (y, Tree (Leaf z)));
     assert (take (Tree (Leaf z)) = (z, empty));
     ()
 
+  (* run_tests: run invariant checks on this implementation of the binary
+   * heap priority queue *)
   let run_tests () = 
     test_add ();
     test_is_empty ();
@@ -951,32 +831,15 @@ struct
 end
 
 module IntHeap = BinaryHeap(IntCompare)
+
 let _ = IntHeap.run_tests ()
 
 
-(* Now to actually use our priority queue implementations for something useful!
- *
- * Priority queues are very closely related to sorts. Remember that removal of
- * elements from priority queues removes elements in highest priority to lowest
- * priority order. So, if your priority for an element is directly related to
- * the value of the element, then you should be able to come up with a simple
- * way to use a priority queue for sorting...
- *
- * In OCaml 3.12, modules can be turned into first-class
- * values, and so can be passed to functions! Here, we're using that to avoid
- * having to create a functor for sort. Creating the appropriate functor
- * is a challenge problem :-)
- *)
-
-(* The following code is simply using our functors and passing in a
- * COMPARABLE module for integers, resulting in priority queues
- * tailored for ints
- *)
+(* Priority Queues specifically to sort ints *)
 module IntListQueue = (ListQueue(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
 module IntHeapQueue = (BinaryHeap(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
-
 module IntTreeQueue = (TreeQueue(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
 
@@ -999,32 +862,20 @@ let sort (m : (module PRIOQUEUE with type elt=IntCompare.t)) (lst : int list) =
   List.rev (extractor pq [])
 
 
-(* Hurray!! Now, we can pass in the modules into sort and get out
- * different sorts!! *)
-
-(* Sorting with a priority queue with an underlying heap
- * implementation is equivalent to heap sort! *)
+(* various sorting algorithms based on underlying data structure *)
 let heapsort = sort heap_module
-
-(* Sorting with a priority queue with your underlying tree
- * implementation is *almost* equivalent to treesort;
- * a real treesort relies on self-balancing binary search trees *)
-
- let treesort = sort tree_module
-
-
-(* Sorting with a priority queue with an underlying unordered list
- * implementation is equivalent to heap sort! If your implementation of
- * ListQueue used ordered ilsts, then this is really insertion sort *)
+let treesort = sort tree_module
 let selectionsort = sort list_module
 
-(* You should test that these sorts all correctly work, and that
- * lists are returned in non-decreasing order!! *)
- 
-assert (heapsort [2;4;5;3;1] = [1;2;3;4;5]);;
-assert (selectionsort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
-
-assert (treesort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
+assert (heapsort [] = [])
+assert (heapsort [3] = [3])
+assert (heapsort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5])
+assert (selectionsort [] = [])
+assert (selectionsort [3] = [3])
+assert (selectionsort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5])
+assert (treesort [] = [])
+assert (treesort [3] = [3])
+assert (treesort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5])
 
 
 (*****************************************************************************)
@@ -1032,33 +883,230 @@ assert (treesort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
 (*****************************************************************************)
 
 (*>* Problem N.0 *>*)
-(* *Highly recommended (and easy)* Challenge problem:
- * Above, we only allow for sorting on int lists. Write a functor that will take
- * a COMPARABLE module as an argument, and allows for sorting on the
- * type defined by that module. You should use your BinaryHeap module.
- *)
- 
-module CompSorter (C : COMPARABLE) : PRIOQUEUE =
+
+(* CompSorter: takes a COMPARABLE module and allow sorting on the type defined
+   by that module *)
+module CompSorter (C : COMPARABLE) =
 struct
-  let 
+
+  type c = C.t
+  
+  (* sort: uses a binary heap-backed priority queue to sort *)
+  let sort (lst : c list) : c list = 
+    let module P = (BinaryHeap(C) : PRIOQUEUE with type elt = c) in
+    let rec extractor pq lst =
+      if P.is_empty pq then lst else
+      let (x, pq') = P.take pq in
+      extractor pq' (x::lst) in
+  let pq = List.fold_right ~f:P.add ~init:P.empty lst in
+  List.rev (extractor pq [])
+
 end
-(* module type SETFUNCTOR = 
-   functor (compare: COMPARABLE) ->
-     module NewHeap = BinaryHeap(compare)
- 
- module type SETFUNCTOR =*)
    
 
 (*>* Problem N.1 *>*)
-(* Challenge problem:
- * Now that you are learning about asymptotic complexity, try to
- * write some functions to analyze the running time of
- * the three different sorts. Record in a comment here the results of
- * running each type of sort on lists of various sizes (you may find
- * it useful to make a function to generate large lists).
- * Of course include your code for how you performed the measurements below.
- * Be convincing when establishing the algorithmic complexity of each sort.
- * See the Sys module for functions related to keeping track of time *)
+
+Random.self_init()
+
+(* gen_list: generates a random list of integers of a certain length *)
+let rec gen_list (len : int) (lst : int list) : int list = 
+  if len = 0 then lst
+  else gen_list (len - 1) ((Random.int Int.max_value) :: lst)
+  
+(* time_to_sort: returns the amount of time taken to apply the given sorting
+   algorithm to the given list *)
+let time_to_sort (sortalg : int list -> int list) (lst : int list) : float =
+  let start = Unix.gettimeofday() in
+  let _ = sortalg lst in
+  Unix.gettimeofday() -. start
+
+(* test_sorts: tests and prints the times for running the sorting algorithms 
+   on lists of varying lengths *)
+let test_sorts (min : int) (max : int) (seq : int) : unit = 
+  let rec test_all sortalg cur = 
+     if cur > max then ()
+     else
+       let _ = print_int cur in
+       let _ = print_char ' ' in
+       let _ = print_float (time_to_sort sortalg (gen_list cur [])) in
+       let _ = print_newline () in
+       test_all sortalg (cur + seq)
+  in
+  let _ = print_endline "Heapsort:" in
+  let _ = test_all heapsort min in
+  let _ = print_endline "Tree sort:" in
+  let _ = test_all treesort min in
+  let _ = print_endline "Selection sort:" in
+  let _ = test_all selectionsort min in
+  ()
+
+
+(* actually test the sorts *)
+(* let _ = test_sorts 1000 50000 1000 *)
+
+(* Based on plots of the raw results and fitting x^2 and x*log(x) curves
+ * to the data,it appears that the complexity of the average run times for
+ * the sorting algorithms are:
+ * Heapsort: O(n log n)
+ * Tree sort: O(n log n)
+ * Selection sort: O(n^2) *)
+
+(* Raw results: 
+Heapsort:
+1000 0.00138187408447
+2000 0.00209307670593
+3000 0.00386905670166
+4000 0.00530004501343
+5000 0.0123028755188
+6000 0.00992012023926
+7000 0.011255979538
+8000 0.0192210674286
+9000 0.0224390029907
+10000 0.0201499462128
+11000 0.0261361598969
+12000 0.0271270275116
+13000 0.0338878631592
+14000 0.0321710109711
+15000 0.0377631187439
+16000 0.0370440483093
+17000 0.0424499511719
+18000 0.0455429553986
+19000 0.064836025238
+20000 0.054486989975
+21000 0.0578501224518
+22000 0.0651259422302
+23000 0.0669701099396
+24000 0.0673670768738
+25000 0.0644872188568
+26000 0.0708930492401
+27000 0.0748109817505
+28000 0.0807960033417
+29000 0.0966742038727
+30000 0.101626873016
+31000 0.0929250717163
+32000 0.0993180274963
+33000 0.0950729846954
+34000 0.0931529998779
+35000 0.0968508720398
+36000 0.108718156815
+37000 0.111907958984
+38000 0.105221033096
+39000 0.116711854935
+40000 0.120548963547
+41000 0.132971048355
+42000 0.136343002319
+43000 0.132279872894
+44000 0.154407978058
+45000 0.140086889267
+46000 0.144338846207
+47000 0.150900840759
+48000 0.162857055664
+49000 0.17184305191
+50000 0.162599086761
+Tree sort:
+1000 0.000500917434692
+2000 0.00146698951721
+3000 0.00209403038025
+4000 0.00383806228638
+5000 0.00980186462402
+6000 0.00673294067383
+7000 0.0103678703308
+8000 0.0105588436127
+9000 0.00922894477844
+10000 0.0198078155518
+11000 0.0191349983215
+12000 0.0145788192749
+13000 0.0199820995331
+14000 0.0262401103973
+15000 0.0271701812744
+16000 0.0283939838409
+17000 0.0305998325348
+18000 0.0312101840973
+19000 0.0293769836426
+20000 0.0361201763153
+21000 0.0401339530945
+22000 0.0385739803314
+23000 0.0404191017151
+24000 0.0452520847321
+25000 0.0417129993439
+26000 0.0498650074005
+27000 0.0477612018585
+28000 0.0529088973999
+29000 0.0506072044373
+30000 0.055704832077
+31000 0.054447889328
+32000 0.0654489994049
+33000 0.0605380535126
+34000 0.0628960132599
+35000 0.064532995224
+36000 0.0650789737701
+37000 0.0652401447296
+38000 0.0675201416016
+39000 0.0697658061981
+40000 0.0697340965271
+41000 0.0811660289764
+42000 0.0793128013611
+43000 0.0785539150238
+44000 0.0823481082916
+45000 0.0789310932159
+46000 0.0813369750977
+47000 0.0842690467834
+48000 0.0885331630707
+49000 0.0940778255463
+50000 0.0913178920746
+Selection sort:
+1000 0.00597596168518
+2000 0.0285320281982
+3000 0.0610699653625
+4000 0.110477924347
+5000 0.167448043823
+6000 0.237142086029
+7000 0.340881109238
+8000 0.474040031433
+9000 0.574506998062
+10000 0.721822023392
+11000 0.859656095505
+12000 1.02237892151
+13000 1.35468912125
+14000 1.74720907211
+15000 1.74593901634
+16000 2.05303883553
+17000 2.30783009529
+18000 2.70913720131
+19000 3.00321602821
+20000 3.8345990181
+21000 4.62922406197
+22000 4.81661081314
+23000 6.15074586868
+24000 6.01404094696
+25000 5.76302695274
+26000 6.6162648201
+27000 6.35800695419
+28000 7.20544409752
+29000 7.51932406425
+30000 8.55282092094
+31000 8.86711192131
+32000 9.79116201401
+33000 10.7192161083
+34000 10.8278110027
+35000 11.5359799862
+36000 12.5026462078
+37000 13.0773460865
+38000 14.4706819057
+39000 14.8201458454
+40000 16.3561911583
+41000 17.6223940849
+42000 19.1826729774
+43000 18.9950928688
+44000 20.3223519325
+45000 21.5616219044
+46000 23.0684869289
+47000 22.9640469551
+48000 24.0982408524
+49000 26.7836000919
+50000 27.7786591053
+ *)
+
 
 (*>* Problem N.2 *>*)
 let minutes_spent : int = 1000
