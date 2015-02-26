@@ -292,17 +292,17 @@ end
 (******************************************************************)
 
 (* Create a set of ints using our ListSet functor. *)
+(*
 module IntListSet = ListSet(IntComparable) ;;
 IntListSet.run_tests();;
+*)
 
 (* Create a set of ints using our DictSet functor
  *
  * Uncomment out the lines below when you are ready to test your
  * 2-3 dict set implementation *)
-(*
 module IntDictSet = DictSet(IntComparable) ;;
 IntDictSet.run_tests();;
-*)
 
 
 (******************************************************************)

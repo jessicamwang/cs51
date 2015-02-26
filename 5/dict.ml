@@ -881,10 +881,8 @@ IntStringListDict.run_tests();;
  *
  * Uncomment out the lines below when you are ready to test your
  * 2-3 tree implementation. *)
-(*
 module IntStringBTDict = BTDict(IntStringDictArg) ;;
 IntStringBTDict.run_tests();;
-*)
 
 
 
@@ -896,7 +894,7 @@ module Make (D:DICT_ARG) : (DICT with type key = D.key
   with type value = D.value) =
   (* Change this line to the BTDict implementation when you are
    * done implementing your 2-3 trees. *)
-  AssocListDict(D)
-  (* BTDict(D) *)
+  (* AssocListDict(D) *)
+  BTDict(D)
 
 let minutes_spent = 1000
