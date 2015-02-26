@@ -823,4 +823,4 @@ module Make (D:DICT_ARG) : (DICT with type key = D.key
   AssocListDict(D)
   (* BTDict(D) *)
 
-let minutes_spent = raise TODO
+let minutes_spent = 1000

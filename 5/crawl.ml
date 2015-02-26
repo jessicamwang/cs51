@@ -57,18 +57,39 @@ let print s =
 (*    PART 1: CRAWLER                                                  *)
 (***********************************************************************)
 
-(* TODO: Build an index as follows:
+(* Builds an index by doing the following:
  *
- * Remove a link from the frontier (the set of links that have yet to
- * be visited), visit this link, add its outgoing links to the
- * frontier, and update the index so that all words on this page are
+ * Remove a link from the frontier, visit this link, add outgoing links
+ * to the frontier, and update the index so that all words on this page are
  * mapped to linksets containing this url.
  *
  * Keep crawling until we've
  * reached the maximum number of links (n) or the frontier is empty. *)
 let rec crawl (n:int) (frontier: LinkSet.set)
     (visited : LinkSet.set) (d:WordDict.dict) : WordDict.dict =
-  WordDict.empty
+  if n = 0 then d
+  else 
+    match LinkSet.choose frontier with
+    | None -> d
+    | Some (url, rem) -> 
+      match CrawlerServices.get_page url with
+      | None -> crawl n rem visited d
+      | Some page ->
+        let visited' = LinkSet.insert url visited in
+        let frontier' = List.fold_left ~f:(fun f l -> 
+                                             if LinkSet.member visited' l then
+                                               f
+                                             else LinkSet.insert l f)
+                                       ~init:rem page.links in
+        let d' = List.fold_left
+                   ~f:(fun d_all w ->
+                         match WordDict.lookup d_all w with
+                         | None -> WordDict.insert d_all w
+                                     (LinkSet.singleton url)
+                         | Some v -> WordDict.insert d_all w
+                                       (LinkSet.insert url v))
+                   ~init:d page.words in
+        crawl (n-1) frontier' visited' d'
 ;;
 
 let crawler () =
