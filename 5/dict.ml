@@ -278,7 +278,7 @@ end
 (* BTDict: a functor that implements our DICT signature           *)
 (* using a balanced tree (2-3 trees)                              *)
 (******************************************************************)
-(*
+
 module BTDict(D:DICT_ARG) : (DICT with type key = D.key
 with type value = D.value) =
 struct
@@ -354,50 +354,18 @@ struct
   (* How do we represent an empty dictionary with 2-3 trees? *)
   let empty : dict = Leaf
 
-  (* TODO:
-   * Implement fold. Read the specification in the DICT signature above. *)
-  let rec fold (f: key -> value -> 'a -> 'a) (u: 'a) (d: dict) : 'a =
-    raise TODO
-
-  (* TODO:
-   * Implement these to-string functions *)
-  let string_of_key = raise TODO
-  let string_of_value = raise TODO
-  let string_of_dict (d: dict) : string = raise TODO
-
-  (* Debugging function. This will print out the tree in text format.
-   * Use this function to see the actual structure of your 2-3 tree. *
-   *
-   * e.g.      (4,d)   (6,f)
-   *         /       |       \
-   *      (2,b)    (4,d)     Leaf
-   *      /  \     /   \
-   *   Leaf  Leaf Leaf  Leaf
-   *
-   * string_of_tree will output:
-   * Three(Two(Leaf,(2,b),Leaf),(4,d),Two(Leaf,(5,e),Leaf),(6,f),Leaf)
-   *
-   * Note that this tree is NOT balanced, because all the paths from (6,f)
-   * to its leaves do NOT all have the same length. *)
-  let rec string_of_tree (d: dict) : string =
-    match d with
-      | Leaf -> "Leaf"
-      | Two(left,(k,v),right) -> "Two(" ^ (string_of_tree left)
-        ^ ",(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ "),"
-        ^ (string_of_tree right) ^ ")"
-      | Three(left,(k1,v1),middle,(k2,v2),right) ->
-        "Three(" ^ (string_of_tree left)
-        ^ ",(" ^ (string_of_key k1) ^ "," ^ (string_of_value v1) ^ "),"
-        ^ (string_of_tree middle) ^ ",(" ^ (string_of_key k2) ^ ","
-        ^ (string_of_value v2) ^ ")," ^ (string_of_tree right) ^ ")"
-
   (* Upward phase for w where its parent is a Two node whose (key,value) is x.
    * One of x's children is w, and the other child is x_other. This function
    * should return a kicked-up configuration containing the new tree as a
    * result of performing the upward phase on w. *)
   let insert_upward_two (w: pair) (w_left: dict) (w_right: dict)
       (x: pair) (x_other: dict) : kicked =
-    raise TODO
+    let (wk, _) = w in
+    let (xk, _) = x in
+    match D.compare wk xk with
+    | Less -> Done (Three (w_left, w, w_right, x, x_other))
+    | Equal -> failwith "Duplicate key"
+    | Greater -> Done (Three (x_other, x, w_left, w, w_right))
 
   (* Upward phase for w where its parent is a Three node whose (key,value) is x.
    * One of x's children is w, and of the two remaining children,
@@ -413,7 +381,16 @@ struct
    * new tree as a result of performing the upward phase on w. *)
   let insert_upward_three (w: pair) (w_left: dict) (w_right: dict)
       (x: pair) (y: pair) (other_left: dict) (other_right: dict) : kicked =
-    raise TODO
+    let (wk, _) = w in
+    let (xk, _) = x in
+    let (yk, _) = y in
+    match (D.compare wk xk, D.compare wk yk) with
+    | (Less, _) -> Up (Two (w_left, w, w_right), x,
+                       Two (other_left, y, other_right))
+    | (_, Greater) -> Up (Two (other_left, x, other_right), y,
+                          Two (w_left, w, w_right))
+    | _ -> Up (Two (other_left, x, w_left), w,
+               Two (w_right, y, other_right))
 
   (* Downward phase for inserting (k,v) into our dictionary d.
    * The downward phase returns a "kicked" up configuration, where
@@ -449,23 +426,50 @@ struct
    * with the appropriate arguments. *)
   let rec insert_downward (d: dict) (k: key) (v: value) : kicked =
     match d with
-      | Leaf -> raise TODO (* base case! see handout *)
-      | Two(left,n,right) -> raise TODO (* mutual recursion *)
-      | Three(left,n1,middle,n2,right) -> raise TODO (* mutual recursion *)
+      | Leaf -> Up (Leaf, (k, v), Leaf)
+      | Two(left,n,right) -> insert_downward_two (k,v) n left right
+      | Three(left,n1,middle,n2,right) -> insert_downward_three (k,v) n1 n2
+                                            left middle right
 
   (* Downward phase on a Two node. (k,v) is the (key,value) we are inserting,
    * (k1,v1) is the (key,value) of the current Two node, and left and right
    * are the two subtrees of the current Two node. *)
   and insert_downward_two ((k,v): pair) ((k1,v1): pair)
       (left: dict) (right: dict) : kicked =
-    raise TODO
+    match D.compare k k1 with
+    | Less -> 
+      (match insert_downward left k v with
+       | Done t -> Done (Two (t, (k1, v1), right))
+       | Up (l, w, r) -> insert_upward_two w l r (k1, v1) right)
+    | Equal -> Done (Two (left, (k, v), right))
+    | Greater -> 
+      (match insert_downward right k v with
+       | Done t -> Done (Two (left, (k1, v1), t))
+       | Up (l, w, r) -> insert_upward_two w l r (k1, v1) left)
 
   (* Downward phase on a Three node. (k,v) is the (key,value) we are inserting,
    * (k1,v1) and (k2,v2) are the two (key,value) pairs in our Three node, and
    * left, middle, and right are the three subtrees of our current Three node *)
   and insert_downward_three ((k,v): pair) ((k1,v1): pair) ((k2,v2): pair)
       (left: dict) (middle: dict) (right: dict) : kicked =
-    raise TODO
+    match (D.compare k k1, D.compare k k2) with
+    | (Less, _) -> 
+      (match insert_downward left k v with
+       | Done t -> Done (Three (t, (k1, v1), middle, (k2, v2), right))
+       | Up (l, w, r) -> insert_upward_three w l r 
+                           (k1, v1) (k2, v2) middle right)
+    | (Equal, _) -> Done (Three (left, (k, v), middle, (k2, v2), right))
+    | (_, Greater) ->
+      (match insert_downward right k v with
+       | Done t -> Done (Three (left, (k1, v1), middle, (k2, v2), t))
+       | Up (l, w, r) -> insert_upward_three w l r
+                           (k1, v1) (k2, v2) left middle)
+    | (_, Equal) -> Done (Three (left, (k1, v1), middle, (k, v), right))
+    | (Greater, Less) ->
+      (match insert_downward middle k v with
+       | Done t -> Done (Three (left, (k1, v1), t, (k2, v2), right))
+       | Up (l, w, r) -> insert_upward_three w l r
+                           (k1, v1) (k2, v2) left right)
 
   (* We insert (k,v) into our dict using insert_downward, which gives us
    * "kicked" up configuration. We return the tree contained in the "kicked"
@@ -613,16 +617,73 @@ struct
       | Absorbed(_,d') -> d'
 
   (* TODO:
+   * Implement fold. Read the specification in the DICT signature above. *)
+  let rec fold (f: key -> value -> 'a -> 'a) (u: 'a) (d: dict) : 'a =
+    match d with
+    | Leaf -> u
+    | Two (_, (k, v), _) | Three (_, (k, v), _, _, _) -> 
+      f k v (fold f u (remove d k))
+
+  (* TODO:
+   * Implement these to-string functions *)
+  let string_of_key = D.string_of_key
+  let string_of_value = D.string_of_value
+  let string_of_dict (d: dict) : string = 
+    fold (fun k v s ->
+            "(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ ") ") "" d
+
+  (* Debugging function. This will print out the tree in text format.
+   * Use this function to see the actual structure of your 2-3 tree. *
+   *
+   * e.g.      (4,d)   (6,f)
+   *         /       |       \
+   *      (2,b)    (4,d)     Leaf
+   *      /  \     /   \
+   *   Leaf  Leaf Leaf  Leaf
+   *
+   * string_of_tree will output:
+   * Three(Two(Leaf,(2,b),Leaf),(4,d),Two(Leaf,(5,e),Leaf),(6,f),Leaf)
+   *
+   * Note that this tree is NOT balanced, because all the paths from (6,f)
+   * to its leaves do NOT all have the same length. *)
+  let rec string_of_tree (d: dict) : string =
+    match d with
+      | Leaf -> "Leaf"
+      | Two(left,(k,v),right) -> "Two(" ^ (string_of_tree left)
+        ^ ",(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ "),"
+        ^ (string_of_tree right) ^ ")"
+      | Three(left,(k1,v1),middle,(k2,v2),right) ->
+        "Three(" ^ (string_of_tree left)
+        ^ ",(" ^ (string_of_key k1) ^ "," ^ (string_of_value v1) ^ "),"
+        ^ (string_of_tree middle) ^ ",(" ^ (string_of_key k2) ^ ","
+        ^ (string_of_value v2) ^ ")," ^ (string_of_tree right) ^ ")"
+
+  (* TODO:
    * Write a lookup function that returns the value of the given key
    * in our dictionary and returns it as an option, or return None
    * if the key is not in our dictionary. *)
   let rec lookup (d: dict) (k: key) : value option =
-    raise TODO
+    match d with
+    | Leaf -> None
+    | Two (l, (k1, v1), r) -> 
+      (match D.compare k k1 with
+       | Equal -> Some v1
+       | Less -> lookup l k
+       | Greater -> lookup r k)
+    | Three (l, (k1, v1), m, (k2, v2), r) ->
+      (match (D.compare k k1, D.compare k k2) with
+       | (Equal, _) -> Some v1
+       | (_, Equal) -> Some v2
+       | (Less, _) -> lookup l k
+       | (_, Greater) -> lookup r k
+       | _ -> lookup m k)
 
   (* TODO:
    * Write a function to test if a given key is in our dictionary *)
   let member (d: dict) (k: key) : bool =
-    raise TODO
+    match lookup d k with
+    | None -> false
+    | _ -> true
 
   (* TODO:
    * Write a function that removes any (key,value) pair from our
@@ -630,7 +691,9 @@ struct
    * as an option this (key,value) pair along with the new dictionary.
    * If our dictionary is empty, this should return None. *)
   let choose (d: dict) : (key * value * dict) option =
-    raise TODO
+    match d with
+    | Leaf -> None
+    | Two (_, (k,v), _) | Three (_, (k,v), _, _, _) -> Some (k, v, remove d k)
 
   (* TODO:
    * Write a function that when given a 2-3 tree (represented by our
@@ -642,9 +705,22 @@ struct
    * ANSWER:
    *    _______________
    *)
-  let rec balanced (d: dict) : bool =
-    raise TODO
-
+  let balanced (d: dict) : bool =
+    let rec balanced_depth di : bool * int = 
+      match di with 
+      | Leaf -> (true, 1)
+      | Two (l, _, r) -> 
+        let (l_bal, l_dep) = balanced_depth l in
+        let (r_bal, r_dep) = balanced_depth r in
+        (l_bal && r_bal && l_dep = r_dep, l_dep + 1)
+      | Three (l, _, m, _, r) ->
+        let (l_bal, l_dep) = balanced_depth l in
+        let (m_bal, m_dep) = balanced_depth m in
+        let (r_bal, r_dep) = balanced_depth r in
+        (l_bal && m_bal && r_bal && l_dep = m_dep && m_dep = r_dep, l_dep + 1)
+    in
+    let (bal,_) = balanced_depth d in
+    bal
 
   (********************************************************************)
   (*       TESTS                                                      *)
@@ -787,7 +863,7 @@ struct
     ()
 
 end
-*)
+
 
 
 
