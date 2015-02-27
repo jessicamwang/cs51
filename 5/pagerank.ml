@@ -207,7 +207,9 @@ struct
     let recipients = 
       match G.neighbors g cur with
       | None -> failwith "Node not in graph"
-      | Some l -> cur :: l
+      | Some l -> 
+        if List.exists ~f:(fun x -> x = cur) l then l
+        else cur :: l
     in 
     let cur_score = 
       match NS.get_score prev cur with
@@ -221,7 +223,21 @@ struct
                          NS.add_score nsm' v out_score) ~init:nsm recipients
 
   let rank (g: G.graph) : NS.node_score_map =
-    failwith "TODO"
+    let nodes = G.nodes g in
+    let num_nodes = List.length nodes in
+    let base = P.alpha /. (float num_nodes) in
+    let rec gen_node_scores (n: int) (nsm : NS.node_score_map) :
+      NS.node_score_map =
+      if n = 0 then nsm
+      else 
+        List.fold_left 
+          ~f:(fun nsm' v ->
+                propagate_weight v g (NS.add_score nsm' v base) nsm)
+          ~init:(NS.zero_node_score_map nodes) nodes
+    in
+    gen_node_scores P.num_steps (NS.fixed_node_score_map (G.nodes g)
+      (1. /. (float num_nodes)))
+
 end
 
 
@@ -289,7 +305,6 @@ struct
 end
 
 
-(*
 module TestQuantumRanker =
 struct
   module G = NamedGraph
@@ -318,4 +333,3 @@ struct
 
 (* That's the problem with randomness -- hard to test *)
 end
-*)
