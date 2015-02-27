@@ -194,6 +194,7 @@ sig
   val debug : bool
 end
 
+
 module QuantumRanker (GA: GRAPH) (NSA: NODE_SCORE with module N = GA.N)
   (P : QUANTUM_PARAMS) :
   (RANKER with module G = GA with module NS = NSA) =
@@ -201,7 +202,26 @@ struct
   module G = GA
   module NS = NSA
 
-  (* TODO - fill this in *)
+  let propagate_weight (cur: G.node) (g: G.graph) (nsm: NS.node_score_map) 
+    (prev: NS.node_score_map) : NS.node_score_map =
+    let recipients = 
+      match G.neighbors g cur with
+      | None -> failwith "Node not in graph"
+      | Some l -> cur :: l
+    in 
+    let cur_score = 
+      match NS.get_score prev cur with
+      | None -> failwith "Node not in NodeScore"
+      | Some x -> x
+    in
+    let out_score = cur_score *. (1. -. P.alpha) /.
+                      (float (List.length recipients))
+    in
+    List.fold_left ~f:(fun nsm' v -> 
+                         NS.add_score nsm' v out_score) ~init:nsm recipients
+
+  let rank (g: G.graph) : NS.node_score_map =
+    failwith "TODO"
 end
 
 
