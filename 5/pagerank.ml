@@ -119,7 +119,6 @@ end
 (* KARMA                                                         *)
 (* Random Walk Ranker                                            *)
 (*****************************************************************)
-(*
 
 module type WALK_PARAMS =
 sig
@@ -138,9 +137,16 @@ struct
   module G = GA
   module NS = NSA
 
-  (* TODO - fill this in*)
+  let rank (g: G.graph) : NS.node_score_map =
+    let rec gen_node_scores (n: int) (cur : G.node) (nsm : NS.node_score_map) :
+      NS.node_score_map =
+      if n = 0 then nsm
+      else 
+    in
+    match g with
+    | G.empty -> NS.empty
+    | _ -> gen_node_scores P.num_steps (G.get_random_node g) NS.empty
 end
-*)
 
 (*****************************************************************)
 (* KARMA                                                         *)

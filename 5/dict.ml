@@ -752,7 +752,7 @@ struct
     else
       (D.gen_key_random(), D.gen_value()) :: (generate_random_list (size - 1))
 
-(*
+
   let test_balance () =
     let d1 = Leaf in
     assert(balanced d1) ;
@@ -792,7 +792,7 @@ struct
                    D.gen_pair(),Leaf,D.gen_pair(),Two(Leaf,D.gen_pair(),Leaf))
     in
     assert(not (balanced d7)) ;
-    () *)
+    ()
 
 (*
   let test_remove_nothing () =
