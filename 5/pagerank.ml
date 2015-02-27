@@ -130,7 +130,7 @@ sig
   val num_steps : int
 end
 
-(*
+
 module RandomWalkRanker (GA: GRAPH) (NSA: NODE_SCORE with module N = GA.N)
   (P : WALK_PARAMS) :
   (RANKER with module G = GA with module NS = NSA) =
@@ -138,27 +138,50 @@ struct
   module G = GA
   module NS = NSA
 
-(*
   let rank (g: G.graph) : NS.node_score_map =
+    let get_next_node (v: G.node) : G.node = 
+    match G.neighbors g v with
+    | None -> failwith "Node not in graph"
+    | Some [] ->
+      (match G.get_random_node g with
+       | None -> failwith "Graph is empty"
+       | Some next_node -> next_node)
+    | Some l -> 
+      match (List.nth l (Random.int (List.length l))) with
+      | None -> failwith "Error sampling neighbors"
+      | Some next_node -> next_node
+    in
     let rec gen_node_scores (n: int) (cur : G.node) (nsm : NS.node_score_map) :
       NS.node_score_map =
       if n = 0 then nsm
       else 
+        let new_nsm = NS.add_score nsm cur 1. in
+        let next = 
+          match P.do_random_jumps with
+          | Some alpha ->
+            if Random.float 1. < alpha then 
+              match G.get_random_node g with
+              | None -> failwith "Graph is empty"
+              | Some next_node -> next_node
+            else get_next_node cur
+          | None -> get_next_node cur
+        in
+        gen_node_scores (n-1) next new_nsm
     in
-    match g with
-    | G.empty -> NS.empty
-    | _ -> gen_node_scores P.num_steps (G.get_random_node g) NS.empty
-*)
+    match G.get_random_node g with
+    | None -> NS.empty
+    | Some init -> NS.normalize (gen_node_scores P.num_steps init
+                          (NS.zero_node_score_map (G.nodes g)))
 
 end
-*)
+
 
 (*****************************************************************)
 (* KARMA                                                         *)
 (* Quantum Ranker                                                *)
 (*****************************************************************)
 
-(*
+
 module type QUANTUM_PARAMS =
 sig
   (* What fraction of each node's score should be uniformly distributed
@@ -180,7 +203,7 @@ struct
 
   (* TODO - fill this in *)
 end
-*)
+
 
 
 (*******************  TESTS BELOW  *******************)
@@ -200,7 +223,7 @@ struct
 
   module Ranker = InDegreeRanker (G) (NS);;
   let ns = Ranker.rank g2;;
-  (* let _ = Printf.printf "NS: %s\n" (NS.string_of_node_score_map ns) ;; *)
+  let _ = Printf.printf "NS: %s\n" (NS.string_of_node_score_map ns) ;;
   assert ((NS.get_score ns "a") = Some 0.0);;
   assert ((NS.get_score ns "b") = Some 1.0);;
   assert ((NS.get_score ns "c") = Some 1.0);;
@@ -214,7 +237,6 @@ struct
 
 end
 
-(*
 module TestRandomWalkRanker =
 struct
   module G = NamedGraph
@@ -245,7 +267,6 @@ struct
 
 (* That's the problem with randomness -- hard to test *)
 end
-*)
 
 
 (*
