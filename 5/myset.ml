@@ -317,7 +317,7 @@ struct
     let elts2 = generate_random_list 100 in
     let s2 = insert_list empty elts2 in
     let unions1s2= union s1 s2 in
-    assert(set_equal (union empty empty) =empty);
+    assert(set_equal (union empty empty) empty);
     List.iter elts1 ~f:(fun x -> Printf.printf "%s\n" (string_of_elt x));
     Printf.printf "%s\n" (string_of_set (union empty s1));
     Printf.printf "%s\n" (string_of_set (s1));

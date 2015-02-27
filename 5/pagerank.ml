@@ -130,6 +130,7 @@ sig
   val num_steps : int
 end
 
+(*
 module RandomWalkRanker (GA: GRAPH) (NSA: NODE_SCORE with module N = GA.N)
   (P : WALK_PARAMS) :
   (RANKER with module G = GA with module NS = NSA) =
@@ -137,6 +138,7 @@ struct
   module G = GA
   module NS = NSA
 
+(*
   let rank (g: G.graph) : NS.node_score_map =
     let rec gen_node_scores (n: int) (cur : G.node) (nsm : NS.node_score_map) :
       NS.node_score_map =
@@ -146,7 +148,10 @@ struct
     match g with
     | G.empty -> NS.empty
     | _ -> gen_node_scores P.num_steps (G.get_random_node g) NS.empty
+*)
+
 end
+*)
 
 (*****************************************************************)
 (* KARMA                                                         *)

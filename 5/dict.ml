@@ -794,7 +794,18 @@ struct
     assert(not (balanced d7)) ;
     ()
 
-(*
+  let test_fold () = 
+    raise TODO
+
+  let test_lookup () = 
+    raise TODO
+
+  let test_member () =
+    raise TODO
+
+  let test_insert () =
+    raise TODO
+
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
@@ -851,15 +862,23 @@ struct
     List.iter pairs5 ~f:(fun (k,_) -> assert(not (member r5 k))) ;
     assert(r5 = empty) ;
     assert(balanced r5) ;
-    () *)
+    ()
+
+  let test_choose () = 
+    raise TODO
 
   let run_tests () =
-(*    test_balance() ; *)
-(*    test_remove_nothing() ;
+    test_balance() ;
+    test_fold() ;
+    test_lookup() ;
+    test_member() ;
+    test_insert() ;
+    test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
     test_remove_reverse_order() ;
-    test_remove_random_order() ; *)
+    test_remove_random_order() ; 
+    test_choose() ;
     ()
 
 end
