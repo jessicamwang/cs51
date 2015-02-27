@@ -409,10 +409,9 @@ end
 (******************************************************************)
 
 (* Create a set of ints using our ListSet functor. *)
-(*
 module IntListSet = ListSet(IntComparable) ;;
 IntListSet.run_tests();;
-*)
+
 
 (* Create a set of ints using our DictSet functor
  *
@@ -429,6 +428,6 @@ IntDictSet.run_tests();;
 module Make(C : COMPARABLE) : (SET with type elt = C.t) =
   (* Change this line to use our dictionary implementation when your are
    * finished. *)
-  ListSet (C)
- (* DictSet (C)*)
+  (* ListSet (C) *)
+  DictSet (C)
 

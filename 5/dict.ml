@@ -805,8 +805,6 @@ struct
   let test_lookup () = 
     let elts1 = generate_pair_list 100 in
     let d1 = insert_list empty elts1 in
-    Printf.printf "%s\n" (string_of_tree d1);
-    List.iter ~f:(fun (k,v) -> Printf.printf "%s %s\n" (string_of_key k) (string_of_value v)) elts1; 
     assert(balanced d1);
     assert(List.fold_left ~f:(fun t (k,v) -> 
                                 t &&
@@ -905,7 +903,7 @@ struct
     test_balance() ;
     test_fold() ;
     test_lookup() ;
-    test_member()
+    test_member() ;
 (*    test_insert() ; *)
     test_remove_nothing() ;
     test_remove_from_nothing() ;
