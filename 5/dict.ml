@@ -801,12 +801,15 @@ struct
     assert( not (fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) false d1));
     ()
 
-(*
+
   let test_lookup () = 
     let elts1 = generate_random_list 100 in
     let d1 = insert_list empty elts1 in
-    assert(List.fold_left ~f:(fun (k,v) -> ) )
-*)
+    assert(List.fold_left ~f:(fun t (k,v) -> 
+                                t &&
+                                match lookup d1 k with
+                                | None -> false
+                                | Some v1 -> v1 = v) ~init:true elts1)
 
 (*
   let test_member () =
@@ -882,7 +885,7 @@ struct
   let run_tests () =
     test_balance() ;
     test_fold() ;
-(*)    test_lookup() ; *)
+    test_lookup() ; 
 (*    test_member() ; *)
 (*    test_insert() ; *)
     test_remove_nothing() ;
