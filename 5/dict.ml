@@ -795,16 +795,26 @@ struct
     ()
 
   let test_fold () = 
-    raise TODO
+    let elts1 = generate_random_list 100 in
+    let d1 = insert_list empty elts1 in
+    assert( fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) true d1);
+    assert( not (fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) false d1));
+    ()
 
+(*
   let test_lookup () = 
-    raise TODO
+    let elts1 = generate_random_list 100 in
+    let d1 = insert_list empty elts1 in
+    assert(List.fold_left ~f:(fun (k,v) -> ) )
+*)
 
+(*
   let test_member () =
     raise TODO
 
   let test_insert () =
     raise TODO
+*)
 
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
@@ -864,21 +874,23 @@ struct
     assert(balanced r5) ;
     ()
 
+(*
   let test_choose () = 
     raise TODO
+*)
 
   let run_tests () =
     test_balance() ;
     test_fold() ;
-    test_lookup() ;
-    test_member() ;
-    test_insert() ;
+(*)    test_lookup() ; *)
+(*    test_member() ; *)
+(*    test_insert() ; *)
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
     test_remove_reverse_order() ;
     test_remove_random_order() ; 
-    test_choose() ;
+(*    test_choose() ; *)
     ()
 
 end
