@@ -821,10 +821,65 @@ struct
     List.iter elts ~f:(fun (k, _) -> assert (member d1 k));
   ()
     
-(*
   let test_insert () =
-    raise TODO
-*)
+    let d1 = Leaf in
+    assert(balanced d1) ;
+    
+    let value = D.gen_value() in
+    let key1 = D.gen_key() in
+    let pair1 = (key1, D.gen_value ()) in
+    let key2 = D.gen_key_gt key1 () in
+    let pair2 = (key2, D.gen_value ()) in
+    let key3 = D.gen_key_gt key2 () in
+    let pair3 = (key3, D.gen_value ()) in
+    let key4 = D.gen_key_gt key3 () in
+    let pair4 = (key4, D.gen_value ()) in
+    let key4 = D.gen_key_gt key3 () in
+    let pair4 = (key4, D.gen_value ()) in
+    let key5 = D.gen_key_gt key4 () in
+    let pair5 = (key5, D.gen_value ()) in
+    let key6 = D.gen_key_gt key5 () in
+    let pair6 = (key6, D.gen_value ()) in
+    let key7 = D.gen_key_gt key6 () in
+    let pair7 = (key7, D.gen_value ()) in
+    let key8 = D.gen_key_gt key7 () in
+    let pair8 = (key8, D.gen_value ()) in
+    let key9 = D.gen_key_gt key8 () in
+    let pair9 = (key9, D.gen_value ()) in
+    
+    let twotree = Two(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair4,Leaf)) in
+    assert(balanced twotree) ;
+    let twotreereplace = insert twotree key2 value in
+    assert(twotreereplace = Two(Two(Leaf,(key2, value),Leaf),pair3,Two(Leaf,pair4,Leaf)));
+    let twotreeless = insert twotree key1 value in
+    assert(twotreeless = Two(Three(Leaf, (key1,value) , Leaf, pair2, Leaf), pair3, Two(Leaf, pair4,Leaf)));
+    let twotreegreater = insert twotree key5 value in
+    assert(twotreegreater = Two(Two(Leaf,pair2,Leaf), pair3, Three(Leaf, pair4, Leaf, (key5, value), Leaf)));
+    
+    let threetree = Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Two(Leaf,pair8,Leaf)) in
+    assert(balanced threetree);
+    let threetreeless = insert threetree key1 value in
+    assert(threetreeless = Three(Three(Leaf, (key1,value), Leaf, pair2, Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Two(Leaf,pair8,Leaf)));
+    let threetreemiddle = insert threetree key4 value in
+    assert(threetreemiddle = Three(Two(Leaf,pair2,Leaf),pair3,Three(Leaf, (key4,value) , Leaf, pair5, Leaf),pair7,Two(Leaf,pair8,Leaf)));
+    let threetreegreater = insert threetree key9 value in
+    assert(threetreegreater = Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Three(Leaf, pair8, Leaf, (key9, value), Leaf)));
+    
+    let threetree2 = Three(Three(Leaf, pair2, Leaf, pair3, Leaf),pair4,Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))in
+    let threetree2left = insert threetree2 key1 value in
+    assert(threetree2left = Two(Two(Two(Leaf,(key1, value),Leaf),pair2,Two(Leaf,pair3,Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
+    let threetree3 = Three(Two(Leaf,pair1,Leaf),pair2,Three(Leaf, pair4, Leaf, pair5, Leaf),pair6,Two(Leaf,pair7,Leaf)) in
+    let threetree3middle = insert threetree3 key3 value in
+    assert(threetree3middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,(key3, value),Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
+    let threetree4 = Three(Two(Leaf,pair1,Leaf),pair2,Three(Leaf, pair3, Leaf, pair5, Leaf),pair6,Two(Leaf,pair7,Leaf)) in
+    let threetree4middle = insert threetree4 key4 value in
+    assert(threetree4middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),(key4, value),Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
+    let threetree5 = Three(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf),pair4,Three(Leaf, pair5, Leaf, pair6, Leaf)) in
+    let threetree5middle = insert threetree5 key7 value in
+    assert(threetree5middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,(key7, value),Leaf))));
+
+  ()
+    
 
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
@@ -846,7 +901,7 @@ struct
     let d1 = insert_list empty pairs1 in
     List.iter
       pairs1
-      ~f:(fun (k,v) ->
+      ~f:(fun (k,_) ->
         let r = remove d1 k in
         let _ = List.iter
           pairs1
@@ -904,7 +959,7 @@ struct
     test_fold() ;
     test_lookup() ;
     test_member() ;
-(*    test_insert() ; *)
+    test_insert() ; 
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
