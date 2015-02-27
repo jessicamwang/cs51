@@ -230,10 +230,12 @@ struct
       NS.node_score_map =
       if n = 0 then nsm
       else 
-        List.fold_left 
-          ~f:(fun nsm' v ->
-                propagate_weight v g (NS.add_score nsm' v base) nsm)
-          ~init:(NS.zero_node_score_map nodes) nodes
+        gen_node_scores (n-1)
+          (NS.normalize
+             (List.fold_left 
+                ~f:(fun nsm' v ->
+                      propagate_weight v g (NS.add_score nsm' v base) nsm)
+                ~init:(NS.zero_node_score_map nodes) nodes))
     in
     gen_node_scores P.num_steps (NS.fixed_node_score_map (G.nodes g)
       (1. /. (float num_nodes)))

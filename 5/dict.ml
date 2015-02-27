@@ -371,12 +371,6 @@ struct
    * One of x's children is w, and of the two remaining children,
    * other_left is the subtree more to the left and other_right is the
    * subtree more to the right.
-   *
-   * E.g. From our handout, for the first case where w's parent is a Three-tree,
-   * other_left would be c and other_right would be d. For the second case,
-   * other_left would be a and other_right would be d. For the third case,
-   * other_left would be a and other_right would be b.
-   *
    * This function should return a kicked-up configuration containing the
    * new tree as a result of performing the upward phase on w. *)
   let insert_upward_three (w: pair) (w_left: dict) (w_right: dict)
@@ -404,21 +398,7 @@ struct
    * Up(left,(k,v),right) if the Two-node represented by this Up needs to
    * be further kicked up in the upward phase (this is represented by an up
    * arrow on the 2-3 Tree handout). We return Done(d) if we have finished
-   * our upward phase on the tree represented by d.
-   *
-   * The functions insert_downward, insert_downward_two, and
-   * insert_downward_three are __mutually recursive__, hence the
-   * "let rec" and the "and" keywords. Here, we use three mutually recursive
-   * functions to simplify our code into smaller pieces.
-   *
-   * Two functions f and g are __mutually recursive__ if in f's definition,
-   * f calls g, and in g's definition, g calls f. This definition of
-   * mutually recursive definitions can be extended to more than two functions,
-   * as follows:
-   *
-   * Functions f1, f2, f3, ..., fn are mutually recursive if for each of
-   * these functions f, all of the other f_i's can be called on some execution
-   * of f. *)
+   * our upward phase on the tree represented by d. *)
 
   (* insert_downward should handle the base case when inserting into a Leaf,
    * and if our dictionary d is a Two-node or a Three-node, we call the
@@ -616,36 +596,23 @@ struct
       | Hole(_,d') -> d'
       | Absorbed(_,d') -> d'
 
-  (* TODO:
-   * Implement fold. Read the specification in the DICT signature above. *)
+  (* Applies a function all key value pairs in a dict and accumulates the
+   * results. *)
   let rec fold (f: key -> value -> 'a -> 'a) (u: 'a) (d: dict) : 'a =
     match d with
     | Leaf -> u
     | Two (_, (k, v), _) | Three (_, (k, v), _, _, _) -> 
       f k v (fold f u (remove d k))
 
-  (* TODO:
-   * Implement these to-string functions *)
   let string_of_key = D.string_of_key
   let string_of_value = D.string_of_value
   let string_of_dict (d: dict) : string = 
     fold (fun k v s ->
-            "(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ ") " ^ s) "" d
+            "(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ ") "
+            ^ s) "" d
 
   (* Debugging function. This will print out the tree in text format.
-   * Use this function to see the actual structure of your 2-3 tree. *
-   *
-   * e.g.      (4,d)   (6,f)
-   *         /       |       \
-   *      (2,b)    (4,d)     Leaf
-   *      /  \     /   \
-   *   Leaf  Leaf Leaf  Leaf
-   *
-   * string_of_tree will output:
-   * Three(Two(Leaf,(2,b),Leaf),(4,d),Two(Leaf,(5,e),Leaf),(6,f),Leaf)
-   *
-   * Note that this tree is NOT balanced, because all the paths from (6,f)
-   * to its leaves do NOT all have the same length. *)
+   * Use this function to see the actual structure of your 2-3 tree. *)
   let rec string_of_tree (d: dict) : string =
     match d with
       | Leaf -> "Leaf"
@@ -658,10 +625,8 @@ struct
         ^ (string_of_tree middle) ^ ",(" ^ (string_of_key k2) ^ ","
         ^ (string_of_value v2) ^ ")," ^ (string_of_tree right) ^ ")"
 
-  (* TODO:
-   * Write a lookup function that returns the value of the given key
-   * in our dictionary and returns it as an option, or return None
-   * if the key is not in our dictionary. *)
+  (* Returns the value of the given key in our dictionary and returns it as
+   * an option, or return None if the key is not in our dictionary. *)
   let rec lookup (d: dict) (k: key) : value option =
     match d with
     | Leaf -> None
@@ -678,16 +643,13 @@ struct
        | (_, Greater) -> lookup r k
        | (Greater, Less) -> lookup m k)
 
-  (* TODO:
-   * Write a function to test if a given key is in our dictionary *)
+  (* Tests if a given key is in our dictionary *)
   let member (d: dict) (k: key) : bool =
     match lookup d k with
     | None -> false
     | _ -> true
 
-  (* TODO:
-   * Write a function that removes any (key,value) pair from our
-   * dictionary (your choice on which one to remove), and returns
+  (* Removes any (key,value) pair from our dictionary, and returns
    * as an option this (key,value) pair along with the new dictionary.
    * If our dictionary is empty, this should return None. *)
   let choose (d: dict) : (key * value * dict) option =
@@ -695,15 +657,14 @@ struct
     | Leaf -> None
     | Two (_, (k,v), _) | Three (_, (k,v), _, _, _) -> Some (k, v, remove d k)
 
-  (* TODO:
-   * Write a function that when given a 2-3 tree (represented by our
-   * dictionary d), returns true if and only if the tree is "balanced",
-   * where balanced means that the given tree satisfies the 2-3 tree
-   * invariants stated above and in the 2-3 tree handout. *)
+  (* Given a 2-3 tree (represented by our dictionary d), returns true if
+   * and only if the tree is "balanced" *)
 
   (* How are you testing that you tree is balanced?
    * ANSWER:
-   *    _______________
+   *    We use a helper function that returns whether a tree is balanced as 
+   *    well as the depth of the tree, and a tree is balanced if all
+   *    subtrees are balanced and of the same depth
    *)
   let balanced (d: dict) : bool =
     let rec balanced_depth di : bool * int = 
@@ -721,12 +682,6 @@ struct
     in
     let (bal,_) = balanced_depth d in
     bal
-
-  (********************************************************************)
-  (*       TESTS                                                      *)
-  (* You must write more comprehensive tests, using our remove tests  *)
-  (* below as an example                                              *)
-  (********************************************************************)
 
   (* adds a list of (key,value) pairs in left-to-right order *)
   let insert_list (d: dict) (lst: (key * value) list) : dict =
@@ -755,13 +710,13 @@ struct
 
   let test_balance () =
     let d1 = Leaf in
-    assert(balanced d1) ;
+    assert(balanced d1);
 
     let d2 = Two(Leaf,D.gen_pair(),Leaf) in
-    assert(balanced d2) ;
+    assert(balanced d2);
 
     let d3 = Three(Leaf,D.gen_pair(),Leaf,D.gen_pair(),Leaf) in
-    assert(balanced d3) ;
+    assert(balanced d3);
 
     let d4 = Three(Two(Two(Two(Leaf,D.gen_pair(),Leaf),D.gen_pair(),
                            Two(Leaf,D.gen_pair(),Leaf)),
@@ -779,27 +734,30 @@ struct
                              Two(Leaf,D.gen_pair(),Leaf),D.gen_pair(),
                              Three(Leaf,D.gen_pair(),Leaf,D.gen_pair(),Leaf))))
     in
-    assert(balanced d4) ;
+    assert(balanced d4);
 
     let d5 = Two(Leaf,D.gen_pair(),Two(Leaf,D.gen_pair(),Leaf)) in
-    assert(not (balanced d5)) ;
+    assert(not (balanced d5));
 
     let d6 = Three(Leaf,D.gen_pair(),
                    Two(Leaf,D.gen_pair(),Leaf),D.gen_pair(),Leaf) in
-    assert(not (balanced d6)) ;
+    assert(not (balanced d6));
 
     let d7 = Three(Three(Leaf,D.gen_pair(),Leaf,D.gen_pair(),Leaf),
                    D.gen_pair(),Leaf,D.gen_pair(),Two(Leaf,D.gen_pair(),Leaf))
     in
-    assert(not (balanced d7)) ;
+    assert(not (balanced d7));
     ()
 
   let test_fold () = 
     let elts1 = generate_random_list 100 in
     let d1 = insert_list empty elts1 in
     assert(balanced d1);
-    assert( fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) true d1);
-    assert( not (fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) false d1));
+    assert(fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a)
+             true d1);
+    assert(not (fold (fun k v a ->
+                        (List.exists ~f:(fun x -> x=(k,v)) elts1) && a)
+                  false d1));
     ()
 
   let test_lookup () = 
@@ -818,13 +776,14 @@ struct
     let elts = generate_random_list 100 in
     List.iter elts ~f:(fun (k, _) -> assert(not (member empty k)));
     let d1 = insert_list empty elts in
-    List.iter elts ~f:(fun (k, _) -> assert (member d1 k));
+    assert(balanced d1);
+    List.iter elts ~f:(fun (k, _) -> assert(member d1 k));
   ()
     
   let test_insert () =
     let d1 = Leaf in
-    assert(balanced d1) ;
-    
+    assert(balanced d1);
+
     let value = D.gen_value() in
     let key1 = D.gen_key() in
     let pair1 = (key1, D.gen_value ()) in
@@ -832,8 +791,6 @@ struct
     let pair2 = (key2, D.gen_value ()) in
     let key3 = D.gen_key_gt key2 () in
     let pair3 = (key3, D.gen_value ()) in
-    let key4 = D.gen_key_gt key3 () in
-    let pair4 = (key4, D.gen_value ()) in
     let key4 = D.gen_key_gt key3 () in
     let pair4 = (key4, D.gen_value ()) in
     let key5 = D.gen_key_gt key4 () in
@@ -845,45 +802,86 @@ struct
     let key8 = D.gen_key_gt key7 () in
     let pair8 = (key8, D.gen_value ()) in
     let key9 = D.gen_key_gt key8 () in
-    let pair9 = (key9, D.gen_value ()) in
     
     let twotree = Two(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair4,Leaf)) in
-    assert(balanced twotree) ;
+    assert(balanced twotree);
     let twotreereplace = insert twotree key2 value in
-    assert(twotreereplace = Two(Two(Leaf,(key2, value),Leaf),pair3,Two(Leaf,pair4,Leaf)));
+    assert(balanced twotreereplace);
+    assert(twotreereplace =
+           Two(Two(Leaf,(key2, value),Leaf),pair3,Two(Leaf,pair4,Leaf)));
     let twotreeless = insert twotree key1 value in
-    assert(twotreeless = Two(Three(Leaf, (key1,value) , Leaf, pair2, Leaf), pair3, Two(Leaf, pair4,Leaf)));
+    assert(balanced twotreeless);
+    assert(twotreeless =
+           Two(Three(Leaf, (key1,value) , Leaf, pair2, Leaf), pair3,
+               Two(Leaf, pair4,Leaf)));
     let twotreegreater = insert twotree key5 value in
-    assert(twotreegreater = Two(Two(Leaf,pair2,Leaf), pair3, Three(Leaf, pair4, Leaf, (key5, value), Leaf)));
+    assert(balanced twotreegreater);
+    assert(twotreegreater =
+           Two(Two(Leaf,pair2,Leaf), pair3,
+               Three(Leaf, pair4, Leaf, (key5, value), Leaf)));
     
-    let threetree = Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Two(Leaf,pair8,Leaf)) in
+    let threetree = Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),
+                          pair7,Two(Leaf,pair8,Leaf)) in
     assert(balanced threetree);
     let threetreeless = insert threetree key1 value in
-    assert(threetreeless = Three(Three(Leaf, (key1,value), Leaf, pair2, Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Two(Leaf,pair8,Leaf)));
+    assert(balanced threetreeless);
+    assert(threetreeless = 
+           Three(Three(Leaf, (key1,value), Leaf, pair2, Leaf), pair3,
+                 Two(Leaf,pair5,Leaf),pair7, Two(Leaf,pair8,Leaf)));
     let threetreemiddle = insert threetree key4 value in
-    assert(threetreemiddle = Three(Two(Leaf,pair2,Leaf),pair3,Three(Leaf, (key4,value) , Leaf, pair5, Leaf),pair7,Two(Leaf,pair8,Leaf)));
+    assert(balanced threetreemiddle);
+    assert(threetreemiddle =
+           Three(Two(Leaf,pair2,Leaf),pair3,
+                 Three(Leaf,(key4,value),Leaf,pair5,Leaf),pair7,
+                 Two(Leaf,pair8,Leaf)));
     let threetreegreater = insert threetree key9 value in
-    assert(threetreegreater = Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,Three(Leaf, pair8, Leaf, (key9, value), Leaf)));
+    assert(balanced threetreegreater);
+    assert(threetreegreater =
+           Three(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair5,Leaf),pair7,
+                 Three(Leaf, pair8, Leaf, (key9, value), Leaf)));
     
-    let threetree2 = Three(Three(Leaf, pair2, Leaf, pair3, Leaf),pair4,Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))in
+    let threetree2 = Three(Three(Leaf, pair2, Leaf, pair3, Leaf),pair4,
+                           Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf)) in
+    assert(balanced threetree2);
     let threetree2left = insert threetree2 key1 value in
-    assert(threetree2left = Two(Two(Two(Leaf,(key1, value),Leaf),pair2,Two(Leaf,pair3,Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
-    let threetree3 = Three(Two(Leaf,pair1,Leaf),pair2,Three(Leaf, pair4, Leaf, pair5, Leaf),pair6,Two(Leaf,pair7,Leaf)) in
+    assert(balanced threetree2left);
+    assert(threetree2left =
+           Two(Two(Two(Leaf,(key1, value),Leaf),pair2,Two(Leaf,pair3,Leaf)),
+               pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
+    let threetree3 = Three(Two(Leaf,pair1,Leaf),pair2,
+                           Three(Leaf, pair4, Leaf, pair5, Leaf),pair6,
+                           Two(Leaf,pair7,Leaf)) in
+    assert(balanced threetree3);
     let threetree3middle = insert threetree3 key3 value in
-    assert(threetree3middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,(key3, value),Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
-    let threetree4 = Three(Two(Leaf,pair1,Leaf),pair2,Three(Leaf, pair3, Leaf, pair5, Leaf),pair6,Two(Leaf,pair7,Leaf)) in
+    assert(balanced threetree3middle);
+    assert(threetree3middle =
+           Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,(key3, value),Leaf)),
+               pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
+    let threetree4 = Three(Two(Leaf,pair1,Leaf),pair2,
+                           Three(Leaf, pair3, Leaf, pair5, Leaf),pair6,
+                           Two(Leaf,pair7,Leaf)) in
+    assert(balanced threetree4);
     let threetree4middle = insert threetree4 key4 value in
-    assert(threetree4middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),(key4, value),Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,pair7,Leaf))));
-    let threetree5 = Three(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf),pair4,Three(Leaf, pair5, Leaf, pair6, Leaf)) in
+    assert(balanced threetree4middle);
+    assert(threetree4middle = 
+           Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),
+               (key4, value),Two(Two(Leaf,pair5,Leaf),pair6,
+                                 Two(Leaf,pair7,Leaf))));
+    let threetree5 = Three(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf),
+                           pair4,Three(Leaf, pair5, Leaf, pair6, Leaf)) in
+    assert(balanced threetree5);
     let threetree5middle = insert threetree5 key7 value in
-    assert(threetree5middle = Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),pair4,Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,(key7, value),Leaf))));
-
+    assert(balanced threetree5middle);
+    assert(threetree5middle =
+           Two(Two(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf)),pair4,
+               Two(Two(Leaf,pair5,Leaf),pair6,Two(Leaf,(key7, value),Leaf))));
   ()
     
 
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
+    assert(balanced d1);
     let r2 = remove d1 (D.gen_key_lt (D.gen_key()) ()) in
     List.iter pairs1 ~f:(fun (k,v) -> assert(lookup r2 k = Some v)) ;
     assert(balanced r2) ;
@@ -899,6 +897,7 @@ struct
   let test_remove_in_order () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
+    assert (balanced d1);
     List.iter
       pairs1
       ~f:(fun (k,_) ->
@@ -917,9 +916,10 @@ struct
   let test_remove_reverse_order () =
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list_reversed empty pairs1 in
+    assert(balanced d1);
     List.iter
       pairs1
-      ~f:(fun (k,v) ->
+      ~f:(fun (k,_) ->
         let r = remove d1 k in
         let _ = List.iter
           pairs1 ~f:(fun (k2,v2) ->
@@ -933,6 +933,7 @@ struct
   let test_remove_random_order () =
     let pairs5 = generate_random_list 100 in
     let d5 = insert_list empty pairs5 in
+    assert(balanced d5);
     let r5 = List.fold_right pairs5 ~f:(fun (k,_) d -> remove d k) ~init:d5 in
     List.iter pairs5 ~f:(fun (k,_) -> assert(not (member r5 k))) ;
     assert(r5 = empty) ;
@@ -941,13 +942,15 @@ struct
 
   let rec choose_until_empty (size : int) (d: dict): (int*bool) = 
     match choose d with
-    |None -> (size, true)
-    |Some(k, _, d1) -> let (size1, bool1) = (choose_until_empty (size+1) d1) in
-                   (size1, (member d k) && bool1 && not (member d1 k))
+    | None -> (size, true)
+    | Some(k, _, d1) -> let (size1, bool1) = (choose_until_empty (size+1) d1) 
+                        in 
+                        (size1, (member d k) && bool1 && not (member d1 k))
     
   let test_choose () = 
     let pairs1 = generate_pair_list 26 in
     let d1 = insert_list empty pairs1 in
+    assert(balanced d1);
     List.iter pairs1 ~f:(fun _ -> assert(not ((choose d1) = None )));
     assert((choose_until_empty 0 d1) = (26, true));
     assert((choose empty) = None);

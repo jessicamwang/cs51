@@ -250,43 +250,43 @@ struct
   type elt = D.key
   type set = D.dict
   let empty = D.empty
-  let insert k d = (D.insert d k k)
-  let singleton k = insert k empty
-  let member = D.member
-  let remove k d = (D.remove d k)
-  let choose d = 
-      match (D.choose d) with
-      |None -> None 
-      |Some (k, _, d1) -> Some (k, d1)
-  let is_empty d =
-      match (choose d) with 
-      |None -> true
-      |Some (_, _) -> false
-  let fold f = D.fold (fun k _ a -> f k a)
-  let union = fold insert
-  let intersect s1 s2 =
-      (fold (fun e s -> if member s2 e then s else remove e s) s2 s1)
 
-  (* implement the rest of the functions in the signature! *)
+  let insert k d = (D.insert d k k)
+
+  let singleton k = insert k empty
+
+  let member = D.member
+
+  let remove k d = (D.remove d k)
+
+  let choose d = 
+    match (D.choose d) with
+    | None -> None 
+    | Some (k, _, d1) -> Some (k, d1)
+
+  let is_empty d =
+    match (choose d) with 
+    | None -> true
+    | Some (_, _) -> false
+
+  let fold f = D.fold (fun k _ a -> f k a)
+
+  let union = fold insert
+
+  let intersect s1 s2 =
+      (fold (fun e s -> if member s2 e then s
+                        else remove e s) s2 s1)
 
   let string_of_elt = D.string_of_key
   let string_of_set s = D.string_of_dict s
 
-  (****************************************************************)
-  (* Tests for our DictSet functor                                *)
-  (* Use the tests from the ListSet functor to see how you should *)
-  (* write tests. However, you must write a lot more              *)
-  (* comprehensive tests to test ALL your functions.              *)
-  (****************************************************************)
-
-  (* add your test functions to run_tests *)
   
   let insert_list (d: set) (lst: elt list) : set =
     List.fold_left lst ~f:(fun r k -> insert k r) ~init:d
 
   let rec generate_random_list (size: int) : elt list =
     if size <= 0 then []
-    else (C.gen_random()) :: (generate_random_list (size - 1))
+    else (C.gen_random ()) :: (generate_random_list (size - 1))
     
   let test_member () =
     let elts = generate_random_list 100 in
@@ -305,11 +305,12 @@ struct
     let elts = generate_random_list 100 in
     let s1 = insert_list empty elts in
     let s2 = List.fold_right elts ~f:(fun k r -> remove k r) ~init:s1 in
-    List.iter elts ~f:(fun k -> assert(not (member s2 k))) ;
+    List.iter elts ~f:(fun k -> assert(not (member s2 k)));
     ()
     
   let set_equal (s1: set) (s2:set) : bool =
-    (fold (fun k a -> (member s1 k) && a) true s2) && (fold (fun k a -> (member s2 k) && a) true s1)
+    (fold (fun k a -> (member s1 k) && a) true s2) &&
+    (fold (fun k a -> (member s2 k) && a) true s1)
     
   let test_union () = 
     let elts1 = generate_random_list 100 in
@@ -325,8 +326,9 @@ struct
   
   let rec list_intersect (lst1: elt list) (lst2: elt list) : elt list =
     match lst1 with
-    |[] -> []
-    |hd::tl -> if (List.exists ~f:(fun x -> x=hd) lst2) then hd :: (list_intersect tl lst2)
+    | [] -> []
+    | hd::tl -> if (List.exists ~f:(fun x -> x=hd) lst2) then
+                  hd :: (list_intersect tl lst2)
                 else list_intersect tl lst2
   
   let test_intersect () =
@@ -354,9 +356,9 @@ struct
   
   let rec choose_until_empty (size : int) (s:set): int*bool =
     match choose s with
-    |None -> (size, true)
-    |Some(k,s1) -> let (size1, bool1) = (choose_until_empty (size+1) s1) in
-                   (size1, (member s k) && bool1 && not (member s1 k))
+    | None -> (size, true)
+    | Some(k,s1) -> let (size1, bool1) = (choose_until_empty (size+1) s1) in
+                    (size1, (member s k) && bool1 && not (member s1 k))
     
   let test_choose () =
     let elts1 = generate_greater_list 100 in
@@ -369,14 +371,16 @@ struct
   let test_fold () =
     let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
-    assert( fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) true s1);
-    assert( not (fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) false s1));
-   ()
+    assert(fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a)
+             true s1);
+    assert(not (fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a)
+                  false s1));
+    ()
     
   let test_is_empty () =
     let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
-    assert( not(is_empty s1));
+    assert(not(is_empty s1));
     assert(is_empty empty);
     ()
     
@@ -425,8 +429,6 @@ IntDictSet.run_tests();;
 (* ListSet or DictSet functors                                    *)
 (******************************************************************)
 module Make(C : COMPARABLE) : (SET with type elt = C.t) =
-  (* Change this line to use our dictionary implementation when your are
-   * finished. *)
   (* ListSet (C) *)
   DictSet (C)
 
