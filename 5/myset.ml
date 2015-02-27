@@ -265,7 +265,7 @@ struct
   let fold f = D.fold (fun k _ a -> f k a)
   let union = fold insert
   let intersect s1 s2 =
-      (fold (fun e s -> if member s2 e then s else remove e s) s2 s1)
+      (fold (fun e s -> if member s2 e then s else remove e s) s1 s2)
 
   (* implement the rest of the functions in the signature! *)
 
@@ -318,16 +318,13 @@ struct
     let s2 = insert_list empty elts2 in
     let unions1s2= union s1 s2 in
     assert(set_equal (union empty empty) empty);
+    List.iter elts1 ~f:(fun x -> Printf.printf "%s\n" (string_of_elt x));
+    Printf.printf "%s\n" (string_of_set (union empty s1));
+    Printf.printf "%s\n" (string_of_set (s1));
     assert(set_equal (union empty s1) s1);
     List.iter elts1 ~f:(fun k -> assert(member unions1s2 k));
     List.iter elts2 ~f:(fun k -> assert(member unions1s2 k));
     ()
-  
-  let rec list_intersect (l1: elt list) (l2: elt list) : elt list =
-    match l1 with
-    |[] -> []
-    |hd::tl -> if (List.exists ~f:(fun x -> x=hd) l2) then hd::(list_intersect tl l2)
-               else list_intersect tl l2
   
   let test_intersect () =
     let elts1 = generate_random_list 100 in
@@ -337,11 +334,10 @@ struct
     let intersects1s1 = intersect s1 s1 in
     List.iter elts1 ~f:(fun k -> assert(member intersects1s1 k));
     let intersects1empty = intersect s1 empty in
-    Printf.printf "%s\n" (string_of_set intersects1empty);
     List.iter elts1 ~f:(fun k -> assert(not (member intersects1empty k)));
-    let intersects1s2 = intersect s1 s2 in
-    let intersectelts = list_intersect elts1 elts2 in
-    List.iter intersectelts ~f:(fun k -> assert(member intersects1s2 k));
+    (*let intersects1s2 = intersect s1 s2 in
+    let eltsintersect = list_intersect elts1 elts 2 in
+    List.iter eltsintersect ~f:(fun k -> assert(member intersects1s2 k));*)
     ()
     
   let rec choose_until_empty (size : int) (s:set) : int =
@@ -360,8 +356,13 @@ struct
   let test_fold () =
     let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
+    let elts2 = generate_random_list 100 in
+    let s2 = insert_list empty elts2 in
+    let intersects1s2 = intersect s1 s2 in 
     assert( fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) true s1);
-    assert( not (fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) false s1));()
+    assert( not (fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) false s1));
+    assert( fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && (List.exists ~f:(fun x -> x=k) elts2) && a ) true intersects1s2);
+    ()
     
   let test_is_empty () =
     let elts1 = generate_random_list 100 in

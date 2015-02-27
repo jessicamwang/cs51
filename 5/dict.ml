@@ -676,7 +676,7 @@ struct
        | (_, Equal) -> Some v2
        | (Less, _) -> lookup l k
        | (_, Greater) -> lookup r k
-       | _ -> lookup m k)
+       | (Greater, Less) -> lookup m k)
 
   (* TODO:
    * Write a function to test if a given key is in our dictionary *)
@@ -797,19 +797,23 @@ struct
   let test_fold () = 
     let elts1 = generate_random_list 100 in
     let d1 = insert_list empty elts1 in
+    assert(balanced d1);
     assert( fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) true d1);
     assert( not (fold (fun k v a -> (List.exists ~f:(fun x -> x=(k,v)) elts1) && a) false d1));
     ()
 
-
   let test_lookup () = 
-    let elts1 = generate_random_list 100 in
+    let elts1 = generate_pair_list 100 in
     let d1 = insert_list empty elts1 in
+    Printf.printf "%s\n" (string_of_tree d1);
+    List.iter ~f:(fun (k,v) -> Printf.printf "%s %s\n" (string_of_key k) (string_of_value v)) elts1; 
+    assert(balanced d1);
     assert(List.fold_left ~f:(fun t (k,v) -> 
                                 t &&
                                 match lookup d1 k with
                                 | None -> false
-                                | Some v1 -> v1 = v) ~init:true elts1)
+                                | Some v1 -> v1 = v) ~init:true elts1);
+    ()
 
 (*
   let test_member () =
