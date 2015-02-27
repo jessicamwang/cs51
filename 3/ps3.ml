@@ -2,29 +2,47 @@ open Core.Std
 exception ImplementMe
 
 (**************************** Part 1: Bignums *******************************)
-type bignum = {neg: bool; coeffs: int list}
-let base = 10
+type bignum = {neg: bool; coeffs: int list};;
+let base = 10;;
 
 (* Please make sure you fully understand the representation invariant for
  * bignums, as documented in the problem set specification. *)
 
 (*>* Problem 1.1 *>*)
 let negate (b : bignum) : bignum =
-  raise ImplementMe
-
+  let {neg = n; coeffs = i} = b in 
+  if i = []
+    then {neg = n; coeffs = i}
+  else
+    {neg = not n; coeffs = i}
+;;
 
 (* Sample negate tests: more exhaustive testing for all other functions
  * is required. (An example of such testing is test_equals below).
  * We only allow the positive representation of 0 *)
-let _ = assert(negate {neg = false; coeffs = []}
-                    = {neg = false; coeffs = []})
-let _ = assert(negate {neg = true; coeffs = [1; 2]}
-                    = {neg = false; coeffs = [1; 2]})
+
+(*Test cases for negate*)
+assert(negate {neg = false; coeffs = []}  = {neg = false; coeffs = []});;
+assert(negate {neg = true; coeffs = [1; 2]} = {neg = false; coeffs = [1; 2]});;
+assert(negate {neg = false; coeffs = [1; 2]} = {neg = true; coeffs = [1; 2]});;
 
 (*>* Problem 1.3.1 *>*)
 let fromInt (n: int) : bignum =
-  raise ImplementMe
+  let rec get_digits (num : int) : int list = 
+    if num = 0 then
+      []
+    else 
+      abs (num mod base) :: get_digits (num/base)
+  in
+  {neg = n<0; coeffs = List.rev (get_digits n)}
+;;
 
+(*Test cases for fromInt*)
+assert(fromInt 0 = {neg = false; coeffs = []});;
+assert(fromInt 123 = {neg = false; coeffs = [1; 2; 3]});;
+assert(fromInt 00123 = {neg = false; coeffs = [1; 2; 3]});;
+assert(fromInt (-123) = {neg = true; coeffs = [1; 2; 3]});;
+assert(fromInt (-12300) = {neg = true; coeffs = [1; 2; 3; 0; 0]});;
 
 (** Some helpful functions **)
 
@@ -100,7 +118,7 @@ let fromString (s : string) : bignum =
         {neg = true; coeffs = (List.rev (fromString_rec (List.rev t)))}
       else {neg = false;
             coeffs = stripzeroes (List.rev (fromString_rec (List.rev (h :: t))))}
-
+;;
 
 (* Converts a bignum to its string representation.
  * Returns a string beginning with ~ for negative integers. *)
@@ -126,9 +144,9 @@ let toString (b : bignum) : string =
 
 
 (*>* Problem 1.2 *>*)
-let rec equal (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
-
+let equal (b1 : bignum) (b2 : bignum) : bool =
+  b1 = b2
+;;
 
 (* Automated testing function. Use this function to help you catch potential
  * edge cases. While this kind of automated testing is helpful, it is still
@@ -136,29 +154,129 @@ let rec equal (b1 : bignum) (b2 : bignum) : bool =
  * algorithm. Also, think about what inputs to run the testing function on. If
  * you're having trouble isolating a bug, you can try printing out which values
  * cause an assert failure. *)
+
+(*Determines if first bignum is equal to second bignum*)
 let rec test_equal (count : int) (max : int) : unit =
   if count > max then ()
   else
     let _ = assert(equal (fromInt count) (fromInt max) = (count = max)) in
     test_equal (count + 1) max
 
-
+(*Tests for equal*)
 let () = test_equal (-10000) 10000
 let () = test_equal 10000 (-10000)
 let () = test_equal (-10000) 9999
 
+(*Determines if first bignum is less than second bignum*)
 let less (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
+  let rec checkNums l1 l2 = 
+    match (l1,l2) with
+    |([],[]) -> true
+    |(hd1::[], hd2::[]) -> hd1 < hd2
+    |(hd1::tl1, hd2::tl2) -> if hd1 < hd2 
+                                then true
+                             else if hd1 > hd2
+                                then false
+                             else checkNums tl1 tl2
+    |(_,_) -> false
+  in                            
+  let listCompare l1 l2 =
+    if List.length l1 > List.length l2
+      then false
+    else if List.length l1 = List.length l2
+      then checkNums l1 l2
+    else true
+  in
+  let {neg = n1; coeffs = l1} = b1 in
+  let {neg = n2; coeffs = l2} = b2 in
+  if n1 && not n2
+     then true
+  else if n2 && not n1
+     then false
+  else 
+    if n1 
+       then not (listCompare l1 l2) 
+    else listCompare l1 l2
+;;
+
+(*Test fucntion for less*)
+let rec test_less (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(less (fromInt count) (fromInt max) = (count < max)) in
+    test_less (count + 1) max
+;;
+
+(*Tests for less*)
+let () = test_less (-10000) 10000;;
+let () = test_less 10000 (-10000);;
+let () = test_less (-10000) 9999;;
 
 
+(*Determines if first bignum is greater than second bignum*)
 let greater (b1 : bignum) (b2 : bignum) : bool =
-  raise ImplementMe
+  if equal b1 b2
+    then false
+  else if less b1 b2
+    then false
+  else true
+;;
 
+(*Test function for greater*)
+let rec test_greater (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(greater (fromInt count) (fromInt max) = (count > max)) in
+    test_greater (count + 1) max
+;;
+
+(*Tests for greater*)
+let () = test_greater (-10000) 10000;;
+let () = test_greater 10000 (-10000);;
+let () = test_greater (-10000) 9999;;
 
 (*>* Problem 1.3.2 *>*)
-let toInt (b : bignum) : int option =
-  raise ImplementMe
 
+(*Changes bignum into int. 
+  Will return None is bignum is bigger than int allows*)
+let toInt (b : bignum) : int option =
+  let rec from_digits (bList : int list) (pow : int)= 
+    match bList with
+    |[] -> Some 0
+    |hd::[] -> Some (hd*pow)
+    |hd::tl ->
+      (match from_digits tl (pow*base) with 
+       |Some num -> if (hd*pow) < hd then
+                       None
+                    else
+                       Some (hd*pow + num)
+       |None -> None)
+  in
+  let {neg = n; coeffs = i} = b in
+  let revList = List.rev i in 
+    match from_digits revList 1 with
+    |Some c -> if n then 
+                  Some (-c) 
+               else Some c
+    |None -> None
+;;
+
+(*Test function for toInt*)
+let rec test_toInt (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(toInt (fromInt count)= (Some count)) in
+    test_toInt (count + 1) max
+;;
+
+
+(*Tests for toInt*)
+let () = test_toInt (-10000) 10000;;
+assert(toInt {neg = false; coeffs = []} = Some 0);;
+assert(toInt {neg = false; coeffs = [1; 2; 3]} = Some 123);;
+assert(toInt {neg = true; coeffs = [1; 2; 3]} = Some (-123));;
+assert(toInt {neg = true; coeffs = [1; 2; 3; 0; 0]} = Some (-12300));;
+assert(toInt {neg=false; coeffs=[1;2;3;4;5;6;7;8;9;8;7;6;5;4;3;2;1]} = None);;
 
 (** Some arithmetic functions **)
 
@@ -198,7 +316,7 @@ let plus_pos (b1 : bignum) (b2 : bignum) : bignum =
                         (b2.neg, List.rev b2.coeffs)
                         0
   in {neg = negres; coeffs = stripzeroes (List.rev coeffsres)}
-
+;;
 
 (*>* Problem 1.4 *>*)
 (* Returns a bignum representing b1 + b2.
@@ -206,7 +324,29 @@ let plus_pos (b1 : bignum) (b2 : bignum) : bignum =
  * Hint: How can you use plus_pos to implement this?
 *)
 let plus (b1 : bignum) (b2 : bignum) : bignum =
-  raise ImplementMe
+  let {neg = n1; coeffs = l1} = b1 in 
+  let {neg = n2; coeffs = l2} = b2 in
+  if n1 = n2 then 
+    let {neg=_; coeffs=lf} = plus_pos {neg=false; coeffs=l1} {neg=false; coeffs=l2} in
+    {neg = n1; coeffs = lf}
+  else if (n1 && greater (negate b1) b2) || (n2 && less b1 (negate b2))
+     then negate (plus_pos (negate b1) (negate b2))
+  else 
+      plus_pos b1 b2
+;;
+
+(*Test function for plus*)
+let rec test_plus (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(plus (fromInt count) (fromInt max)=(fromInt (count+max))) in
+    test_plus (count + 1) max
+;;
+
+(*Tests for plus*)
+let () = test_plus (-10000) 10000;;
+let () = test_plus 10000 (-10000);;
+let () = test_plus (-10000) 9999;;
 
 
 (*>* Problem 1.5 *>*)
@@ -232,8 +372,47 @@ let plus (b1 : bignum) (b2 : bignum) : bignum =
  * simplify code, as long as you respect that invariant.
 *)
 let times (b1 : bignum) (b2 : bignum) : bignum =
-  raise ImplementMe
+  let rec singleMult blist mult carry =
+    match blist with
+    |[] -> if carry > 0 
+              then [carry]
+           else
+              []
+    |hd::tl -> let product = (hd * mult) + carry in 
+              (product mod base)::(singleMult tl mult (product/base))
+  in
+  let rec append0 blist pow =
+    if pow > 0 
+       then 0::(append0 blist (pow - 1))
+    else blist
+  in
+  let rec multLists list1 list2 pow =
+    match list2 with
+    |[] -> {neg = false; coeffs = []}
+    |hd::tl -> plus 
+       ({neg = false; coeffs = List.rev (append0 (singleMult list1 hd 0) pow)})
+       (multLists list1 tl (pow + 1))
+  in
+  let {neg = n1; coeffs = l1} = b1 in
+  let {neg = n2; coeffs = l2} = b2 in
+  if n1 = n2
+    then multLists (List.rev l1) (List.rev l2) 0
+  else
+    negate (multLists (List.rev l1) (List.rev l2) 0)
+;;
 
+(*Test function for times*)
+let rec test_times (count : int) (max : int) : unit =
+  if count > max then ()
+  else
+    let _ = assert(times (fromInt count) (fromInt max) = (fromInt (count * max))) in
+    test_times (count + 1) max
+;;
+
+(*Tests for times*)
+let () = test_times (-10000) 10000;;
+let () = test_times 10000 (-10000);;
+let () = test_times (-10000) 9999;;
 
 (* Returns a bignum representing b/n, where n is an integer less than base *)
 let divsing (b : int list) (n : int) : int list * int =
@@ -373,7 +552,8 @@ let rec generateKeyPair (r : bignum) : bignum * bignum * bignum =
 
 (* To encrypt, pass in n e s. To decrypt, pass in n d s. *)
 let encryptDecryptBignum (n : bignum) (e : bignum) (s : bignum) : bignum =
-  raise ImplementMe
+  expmod s e n
+;;
 
 
 (* Pack a list of chars as a list of bignums, with m chars to a bignum. *)
@@ -422,20 +602,31 @@ let rec encDecBignumList (n : bignum) (e : bignum) (lst : bignum list) =
 
 (*>* Problem 2.2 *>*)
 let encrypt (n : bignum) (e : bignum) (s : string) =
-  raise ImplementMe
+  encDecBignumList n e (charsToBignums (explode s) (bytesInKey n))
+;;
 
 
 (* Decrypt an encrypted message (list of bignums) to produce the
  * original string. *)
 let decrypt (n : bignum) (d : bignum) (m : bignum list) =
-  raise ImplementMe
+  implode (bignumsToChars (encDecBignumList n d m))
+;;
 
+let (e, d, n) = generateKeyPair (fromInt 100);;
+
+assert(encryptDecryptBignum n d (encryptDecryptBignum n e (fromInt 123456789))
+                   = (fromInt 123456789));;
+
+let message = "Hi, I'm a secret message. Hopefully this function works
+ wooohoo RSA rocks";;
+ 
+assert(decrypt n d (encrypt n e message) = message);;
 
 (**************** Challenge 2: Faster Multiplication *********************)
 
 (* Returns a bignum representing b1*b2 *)
-let times_faster (b1 : bignum) (b2 : bignum) : bignum =
-  raise ImplementMe
+(*let times_faster (b1 : bignum) (b2 : bignum) : bignum =
+  raise ImplementMe*)
 
 
-let minutes_spent = raise ImplementMe
+let minutes_spent = 600;;
