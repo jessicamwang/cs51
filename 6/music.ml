@@ -121,10 +121,23 @@ let shift_start (by : float) (str : event stream) =
  * Hint: Use a recursive helper function as defined, which will change the
  * list but keep the original list around as lst. Both need to be recursive,
  * since you will call both the inner and outer functions at some point. *)
+
 let rec list_to_stream (lst : obj list) : event stream =
   let rec list_to_stream_rec nlst =
-    failwith "Unimplemented"
-  in list_to_stream_rec lst
+    match nlst with
+    | [] -> list_to_stream lst
+    | obj1 :: tl ->
+      match obj1 with
+      | Note(p,t,v) -> fun () ->
+                         Cons (Tone (0., p, v),
+                               fun () ->
+                                 (Cons (Stop (t, p),
+                                        list_to_stream_rec tl)))
+      | Rest t -> shift_start t (list_to_stream_rec tl)
+  in 
+  match lst with
+  | [] -> failwith "Cannot create stream from empty list"
+  | _ -> list_to_stream_rec lst
 
 (* You might find this small helper function, well... helpful. *)
 let time_of_event (e : event) : float =
@@ -135,8 +148,17 @@ let time_of_event (e : event) : float =
 (*>* Problem 3.2 *>*)
 (* Write a function pair that merges two event streams. Events that happen
  * earlier in time should appear earlier in the merged stream. *)
+
 let rec pair (a : event stream) (b : event stream) : event stream =
-  failwith "Unimplemented"
+  let Cons(a_ev, a_tl) = a () in
+  let Cons(b_ev, b_tl) = b () in
+  let a_t = time_of_event a_ev in
+  let b_t = time_of_event b_ev in
+  if a_t <= b_t then 
+    fun () -> Cons(a_ev, pair a_tl (shift_start (-.a_t) b))
+  else 
+    fun () -> Cons(b_ev, pair (shift_start (-.b_t) a) b_tl)
+
 
 (*>* Problem 3.3 *>*)
 (* Write a function transpose that takes an event stream and moves each pitch
@@ -152,7 +174,11 @@ let transpose_pitch (p, oct) half_steps =
     else (int_to_p (newp mod 12), oct + (newp / 12))
 
 let transpose (str : event stream) (half_steps : int) : event stream =
-    failwith "Unimplemented"
+  map (fun ev -> 
+         match ev with
+         | Tone(t, p, v) -> Tone(t, transpose_pitch p half_steps, v)
+         | Stop(t, p) -> Stop(t, transpose_pitch p half_steps))
+      str
 
 (* Some functions for convenience. *)
 let quarter pt = Note(pt,0.25,60);;
@@ -163,7 +189,6 @@ let eighth pt = Note(pt,0.125,60);;
  * the functions above. *)
 (* Start off with some scales. We've done these for you.*)
 
-(*
 let scale1 = list_to_stream (List.map ~f:quarter [(C,3);(D,3);(E,3);(F,3);(G,3);
                                             (A,3);(B,3);(C,4)]);;
 
@@ -172,12 +197,10 @@ let scale2 = transpose scale1 7;;
 let scales = pair scale1 scale2;;
 
 output_midi "scale.mid" 32 scales;;
-*)
 
 (*>* Problem 3.4 *>*)
 (* Then with just three lists ... *)
 
-(*
 let bass = list_to_stream (List.map ~f:quarter [(D,3);(A,2);(B,2);(Gb,2);(G,2);
                                              (D,2);(G,2);(A,2)]);;
 
@@ -188,7 +211,6 @@ let fast = [(D,3);(Gb,3);(A,3);(G,3);(Gb,3);(D,3);(Gb,3);(E,3);(D,3);(B,2);
 
 let melody = list_to_stream ((List.map ~f:quarter slow) @
                 (List.map ~f:eighth fast));;
-*)
 
 (* ...and the functions we defined, produce (a small part of) a great piece of
  * music. The piece should be four streams merged: one should be the bass
@@ -199,9 +221,11 @@ let melody = list_to_stream ((List.map ~f:quarter slow) @
  * bass and melody. Uncomment the definitions above and the lines below when
  * you're done. Run the program to hear the beautiful music. *)
 
-(* let canon = failwith "Unimplemented";;
+let canon = pair (shift_start 2. melody) 
+                 (pair (shift_start 4. melody)
+                       (pair (shift_start 6. melody) bass));;
 
-output_midi "canon.mid" 176 canon;; *)
+output_midi "canon.mid" 208 canon;;
 
 (* Some other musical parts for you to play with. *)
 
@@ -229,4 +253,4 @@ let part4 = list_to_stream [Rest(0.25); Note((G,3),0.25,60);
 (* Please give us an honest estimate of how long this part took
  * you to complete.  We care about your responses and will use
  * them to help guide us in creating future assignments. *)
-let minutes_spent : int = -1
+let minutes_spent : int = 120
