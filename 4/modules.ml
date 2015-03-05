@@ -17,12 +17,20 @@ end
 (* Write a module called Math that implements the MATH signature above 
  * We have started the module for you below*)
 
-(* 
-module Math: ??? =
+
+module Math: MATH =
 struct
-   ???
+   let pi = acos (-1.)
+   let cos = cos
+   let sin = sin
+   let sum (x : float) (y : float) = x +. y
+   let max (x : float list) = 
+      match x with 
+      |[] -> None
+      |_ -> Some (List.fold_right x ~f:(fun x m -> if x < m then m
+                                              else x) ~init: Float.min_value)                                         
 end
-*)
+
 
 (*>* Problem 1.1 *>*)
 
