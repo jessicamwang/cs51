@@ -17,7 +17,6 @@ end
 (* Write a module called Math that implements the MATH signature above 
  * We have started the module for you below*)
 
-
 module Math: MATH =
 struct
    let pi = acos (-1.)
@@ -41,26 +40,20 @@ end
  * We have given you the beginnings of the signature below. 
 *)
 
-(*
-module type ??? =
+
+module type LIST =
 sig
-  ???
+  val length : 'a list -> int
+  val fold_right : 'a list -> f:('a -> 'b -> 'b) -> init:'b -> 'b
+  val rev : 'a list -> 'a list
 end
-*)
 
-(* The following should work after you have created your signature (you
- * can uncomment them *)
-
-
-(*
 module MyList = (List : LIST);;
 
 let _ =
     assert(MyList.length [1;2;3] = 3);
     assert(MyList.fold_right ~f:(+) ~init:0 [1;2;3] = 6);
     assert(MyList.rev [1;2;3] = [3;2;1])
-*)
-
 
 (* Even with your signature, the following line should never compile:
 
