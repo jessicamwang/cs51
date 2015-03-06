@@ -826,7 +826,38 @@ struct
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
   let test_add () =
-    
+    let x = C.generate () in
+    let q = add x empty in
+    assert (q = Tree (Leaf x));
+    let q2 = add x q in 
+    assert (q2 = Tree (OneBranch (x,x)));
+    let y = C.generate_gt x () in
+    let q3 = add y q in
+    assert (q3 = Tree (OneBranch (y,x)));
+    let z = C.generate_lt x () in
+    let q4 = add z q in
+    assert (q4 = Tree (OneBranch (x,z)));
+    let q5 = add x q2 in 
+    assert (q5 = Tree (TwoBranch (Even, x, Leaf x, Leaf x)));
+    let q6 = add y q2 in 
+    assert (q6 = Tree (TwoBranch (Even, x, Leaf x, Leaf y)));
+    let q7 = add z q2 in 
+    assert (q7 = Tree (TwoBranch (Even, z, Leaf x, Leaf x)));
+    let q8 = Tree (TwoBranch (Even, z, Leaf x, Leaf y)) in
+    let q9 = add z q8 in
+    assert (q9 = Tree (TwoBranch (Odd, z, OneBranch (z,x), Leaf y)));
+    let q10 = add y q8 in
+    assert (q10 = Tree (TwoBranch (Odd, z, OneBranch (x,y), Leaf y))); 
+    let zz = C.generate_lt z () in 
+    let q11 = add zz q8 in
+    assert (q11 = Tree (TwoBranch (Odd, zz, OneBranch (z,x), Leaf y)));
+    let q12 = add z q10 in
+    assert (q12 = Tree (TwoBranch (Even, z, OneBranch (x,y), OneBranch (z,y))));
+    let q13 = add x q10 in
+    assert (q13 = Tree (TwoBranch (Even, z, OneBranch (x,y), OneBranch (x,y))));
+    let q14 = add zz q10 in
+    assert (q14 = Tree (TwoBranch (Even, zz, OneBranch (x,y), OneBranch (z,y))));
+    ()
 
   let test_is_empty () =
     let h = empty in
@@ -836,6 +867,9 @@ struct
     ()
     
   let test_get_top () =
+    let q = empty in 
+    assert (get_top q = 
+  
 
   let test_fix () =
 
@@ -843,16 +877,16 @@ struct
 
   let test_get_last () =
 
-  let test_take () =
+  let test_take () =*)
 
   let run_tests () = 
-    test_add ()
-    test_is_empty ()
-    test_get_top ()
-    test_fix ()
-    test_extract_tree ()
-    text_get_last ()
-    text_take ()
+    test_add ();
+    test_is_empty ();
+   (* test_get_top ();
+    test_fix ();
+    test_extract_tree ();
+    text_get_last ();
+    text_take ();*)
 end
 
 
