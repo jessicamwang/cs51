@@ -509,7 +509,7 @@ struct
     let q = add x q in
     assert (q = [z;x;x;y]);
     ()
-
+(* DO SAME PRIORITY *)
   let test_take () =
     let x = C.generate () in
     let q = add x empty in
@@ -736,9 +736,7 @@ struct
    * match in *)
   let get_top (t : tree) : elt = 
      match t with
-      | Leaf e1 -> e1
-      | OneBranch(e1, _) -> e1
-      | TwoBranch(_, e1, _, _) -> e1
+      | Leaf e1 | OneBranch(e1, _) | TwoBranch(_, e1, _, _) -> e1
 
   (* Takes a tree, and if the top node is greater than its children, fixes
    * it. If fixing it results in a subtree where the node is greater than its
@@ -826,6 +824,7 @@ struct
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
   let test_add () =
+<<<<<<< HEAD
     let x = C.generate () in
     let q = add x empty in
     assert (q = Tree (Leaf x));
@@ -858,6 +857,9 @@ struct
     let q14 = add zz q10 in
     assert (q14 = Tree (TwoBranch (Even, zz, OneBranch (x,y), OneBranch (z,y))));
     ()
+=======
+
+>>>>>>> acb45c48d40939940bb3f29162c6aebac0b06c93
 
   let test_is_empty () =
     let h = empty in
@@ -1062,4 +1064,4 @@ struct
  * See the Sys module for functions related to keeping track of time *)
 
 (*>* Problem N.2 *>*)
-let minutes_spent : int = 750
+let minutes_spent : int = 1000
