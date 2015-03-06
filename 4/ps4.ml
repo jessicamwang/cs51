@@ -749,7 +749,7 @@ struct
       | OneBranch(e1, e2) ->
         (match C.compare e1 e2 with
          | Equal | Less -> t
-         | Greater -> OneBranch(e1, e1))
+         | Greater -> OneBranch(e2, e1))
       | TwoBranch(bal, e1, t1, t2) ->
         (match (C.compare e1 (get_top t1), 
                 C.compare e1 (get_top t2), 
@@ -833,10 +833,10 @@ struct
     assert (q2 = Tree (OneBranch (x,x)));
     let y = C.generate_gt x () in
     let q3 = add y q in
-    assert (q3 = Tree (OneBranch (y,x)));
+    assert (q3 = Tree (OneBranch (x, y)));
     let z = C.generate_lt x () in
     let q4 = add z q in
-    assert (q4 = Tree (OneBranch (x,z)));
+    assert (q4 = Tree (OneBranch (z,x)));
     let q5 = add x q2 in 
     assert (q5 = Tree (TwoBranch (Even, x, Leaf x, Leaf x)));
     let q6 = add y q2 in 
@@ -866,29 +866,92 @@ struct
     assert (not (is_empty h));
     ()
     
+  let test_extract_tree () =  
+    let x = C.generate () in
+    assert (extract_tree (Tree (Leaf x)) = Leaf x);
+    () 
+    
   let test_get_top () =
-    let q = empty in 
-    assert (get_top q = 
-  
-
+    let x = C.generate () in 
+    let q = add x empty in
+    assert (get_top (extract_tree q) = x);
+    let y = C.generate_gt x () in 
+    let q = add y q in 
+    assert (get_top (extract_tree q) = x);
+    let z = C.generate_lt x () in 
+    let q = add z q in
+    assert (get_top (extract_tree q) = z);
+    ()
+    
   let test_fix () =
-
-  let test_extract_tree () =
+    let x = C.generate () in
+    let q = add x empty in 
+    assert (fix (extract_tree q) = (extract_tree q));
+    assert (fix (OneBranch(x,x)) = OneBranch(x,x));
+    let y = C.generate_gt x () in 
+    let yy = C.generate_gt y () in
+    assert (fix (OneBranch(x,y)) = OneBranch (x,y));
+    assert (fix (OneBranch(y,x)) = OneBranch (x,y));
+    let zx2 = C.generate_lt x () in
+    let zx1 = C.generate_lt zx2 () in
+    let z = C.generate_lt zx1 () in 
+    assert (fix (TwoBranch(Even, x, Leaf z, Leaf y)) = TwoBranch(Even, z, Leaf x, Leaf y));
+    assert (fix (TwoBranch(Even, x, Leaf z, Leaf z)) = TwoBranch(Even, z, Leaf x, Leaf z));
+    assert (fix (TwoBranch(Even, x, Leaf y, Leaf z)) = TwoBranch(Even, z, Leaf y, Leaf x));
+    assert (fix (TwoBranch(Odd, x, OneBranch(z,y), Leaf y)) = TwoBranch(Odd, z, OneBranch(x,y), Leaf y));
+    assert (fix (TwoBranch(Odd, x, OneBranch(z,zx1), Leaf y)) = TwoBranch(Odd, z, OneBranch(zx1, x), Leaf y));
+    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z,y))) = TwoBranch(Odd, z, Leaf y, OneBranch (x,y)));
+    assert (fix (TwoBranch(Odd, x, Leaf y, OneBranch(z,zx1))) = TwoBranch(Odd, z, Leaf y, OneBranch(zx1,x)));
+    assert (fix (TwoBranch(Even, x, TwoBranch (Even, z, Leaf zx1, Leaf zx2), TwoBranch (Even, y, Leaf yy, Leaf yy))) = 
+                 TwoBranch(Even, z, fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2)), TwoBranch (Even, y, Leaf yy, Leaf yy)));
+    assert (fix (TwoBranch(Even, x, TwoBranch (Even, y, Leaf yy, Leaf yy), TwoBranch (Even, z, Leaf zx1, Leaf zx2))) = 
+                 TwoBranch(Even, z, TwoBranch (Even, y, Leaf yy, Leaf yy), fix (TwoBranch (Even, x, Leaf zx1, Leaf zx2))));
+   
+    ()
 
   let test_get_last () =
+    let w = C.generate () in
+    let x = C.generate_gt w () in
+    let y = C.generate_gt x () in
+    let z = C.generate_gt y () in
+    let q1 = add w empty in
+    let q2 = add x q1 in
+    let q3 = add y q2 in
+    let q4 = add z q3 in
+    assert (get_last (extract_tree q4) = (z, q3));
+    (*assert (get_last (extract_tree q3) = (y, q2));*)
+    assert (get_last (extract_tree q2) = (x, q1));
+    assert (get_last (extract_tree q1) = (w, empty));
+    ()
 
-  let test_take () =*)
+  let test_take () =
+    let w = C.generate () in
+    let x = C.generate_gt w () in
+    let y = C.generate_gt x () in
+    let z = C.generate_gt y () in
+    let q = add w empty in
+    let q = add x q in
+    let q = add y q in
+    let q = add z q in
+    assert (q = Tree (TwoBranch(Odd, w, OneBranch(x,z), Leaf y)));
+    assert (take q = (w, Tree (TwoBranch(Even, x, Leaf z, Leaf y))));
+    assert (take (Tree (TwoBranch(Even, x, Leaf z, Leaf y))) = (x, Tree (OneBranch (y,z))));
+    assert (take (Tree (OneBranch (y,z))) = (y, Tree (Leaf z)));
+    assert (take (Tree (Leaf z)) = (z, empty));
+    ()
 
   let run_tests () = 
     test_add ();
     test_is_empty ();
-   (* test_get_top ();
-    test_fix ();
     test_extract_tree ();
-    text_get_last ();
-    text_take ();*)
+    test_get_top ();
+    test_fix ();
+    test_get_last ();
+    test_take ();
 end
 
+module IntHeap = BinaryHeap(IntCompare)
+let _ = IntHeap.run_tests ()
 
 
 (* Now to actually use our priority queue implementations for something useful!
@@ -913,17 +976,16 @@ module IntListQueue = (ListQueue(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
 module IntHeapQueue = (BinaryHeap(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
-(*
+
 module IntTreeQueue = (TreeQueue(IntCompare) :
                         PRIOQUEUE with type elt = IntCompare.t)
-*)
+
 
 (* store the whole modules in these variables *)
 let list_module = (module IntListQueue : PRIOQUEUE with type elt = IntCompare.t)
 let heap_module = (module IntHeapQueue : PRIOQUEUE with type elt = IntCompare.t)
-(*
 let tree_module = (module IntTreeQueue : PRIOQUEUE with type elt = IntCompare.t)
-*)
+
 
 (* Implements sort using generic priority queues. *)
 let sort (m : (module PRIOQUEUE with type elt=IntCompare.t)) (lst : int list) =
@@ -948,9 +1010,8 @@ let heapsort = sort heap_module
  * implementation is *almost* equivalent to treesort;
  * a real treesort relies on self-balancing binary search trees *)
 
-(*
-let treesort = sort tree_module
-*)
+ let treesort = sort tree_module
+
 
 (* Sorting with a priority queue with an underlying unordered list
  * implementation is equivalent to heap sort! If your implementation of
@@ -959,6 +1020,11 @@ let selectionsort = sort list_module
 
 (* You should test that these sorts all correctly work, and that
  * lists are returned in non-decreasing order!! *)
+ 
+assert (heapsort [2;4;5;3;1] = [1;2;3;4;5]);;
+assert (selectionsort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
+
+assert (treesort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
 
 
 (*****************************************************************************)
@@ -971,6 +1037,18 @@ let selectionsort = sort list_module
  * a COMPARABLE module as an argument, and allows for sorting on the
  * type defined by that module. You should use your BinaryHeap module.
  *)
+ 
+(* module CompSorter (C : COMPARABLE) : PRIOQUEUE =
+struct
+  let sorted = 
+  (BinaryHeap(IntCompare) :
+                        PRIOQUEUE with type elt = IntCompare.t) *)
+(* module type SETFUNCTOR = 
+   functor (compare: COMPARABLE) ->
+     module NewHeap = BinaryHeap(compare)
+ 
+ module type SETFUNCTOR =*)
+   
 
 (*>* Problem N.1 *>*)
 (* Challenge problem:
