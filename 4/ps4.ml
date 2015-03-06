@@ -839,4 +839,4 @@ let selectionsort = sort list_module
  * See the Sys module for functions related to keeping track of time *)
 
 (*>* Problem N.2 *>*)
-let minutes_spent : int = raise ImplementMe
+let minutes_spent : int = 660
