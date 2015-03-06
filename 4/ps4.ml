@@ -650,12 +650,39 @@ struct
 
   (* Simply returns the top element of the tree t (i.e., just a single pattern
    * match in *)
-  let get_top (t : tree) : elt = raise ImplementMe
+  let get_top (t : tree) : elt = 
+     match t with
+      | Leaf e1 -> e1
+      | OneBranch(e1, _) -> e1
+      | TwoBranch(_, e1, _, _) -> e1
 
   (* Takes a tree, and if the top node is greater than its children, fixes
    * it. If fixing it results in a subtree where the node is greater than its
    * children, then you must (recursively) fix this tree too. *)
-  let rec fix (t : tree) : tree = raise ImplementMe
+  let rec fix (t : tree) : tree = 
+     match t with
+      | Leaf _ -> t
+      | OneBranch(e1, e2) ->
+        (match C.compare e1 e2 with
+         | Equal | Less -> t
+         | Greater -> OneBranch(e1, e1))
+      | TwoBranch(bal, e1, t1, t2) ->
+        (match (C.compare e1 (get_top t1), 
+                C.compare e1 (get_top t2), 
+                C.compare (get_top t1) (get_top t2)) with
+         | (Greater, _, Less) | (Greater, _, Equal) -> 
+             (match t1 with 
+              |Leaf _ -> TwoBranch(bal, get_top t1, Leaf e1, t2)
+              |OneBranch(t1_e1, t1_e2) -> TwoBranch(bal, t1_e1, fix (OneBranch(e1,t1_e2)), t2)
+              |TwoBranch(bal1, t1_e1, t1_t1, t1_t2) -> TwoBranch(bal, t1_e1, fix (TwoBranch(bal1, e1,t1_t1, t1_t2)), t2)
+             )
+         | (_, Greater, Greater) -> 
+             (match t2 with 
+              |Leaf _ -> TwoBranch(bal, get_top t2, t1, Leaf e1)
+              |OneBranch(t2_e1, t2_e2) -> TwoBranch(bal, t2_e1, t1, fix (OneBranch(e1,t2_e2)))
+              |TwoBranch(bal1, t2_e1, t2_t1, t2_t2) -> TwoBranch(bal, t2_e1, t1, fix (TwoBranch(bal1, e1,t2_t1, t2_t2)))
+             )
+         | _ -> t)
 
   let extract_tree (q : queue) : tree =
     match q with
@@ -675,7 +702,14 @@ struct
    * down into a new node at the bottom of the tree. *This* is the node
    * that we want you to return.
    *)
-  let rec get_last (t : tree) : elt * queue = raise ImplementMe
+  let rec get_last (t : tree) : elt * queue = 
+     match t with 
+     | Leaf e1 -> (e1, empty)
+     | OneBranch(e1, e2) ->  (e2, Tree (Leaf e1))
+     | TwoBranch(Even, e1, t1, t2) -> let (gl_t2e, gl_t2t) = get_last t2 in
+                                      (gl_t2e, Tree (TwoBranch(Odd, e1, t1, extract_tree gl_t2t))) 
+     | TwoBranch(Odd, e1, t1, t2) -> let (gl_t1e, gl_t1t) = get_last t1 in
+                                      (gl_t1e, Tree (TwoBranch(Even, e1, extract_tree gl_t1t, t2))) 
 
   (* Implements the algorithm described in the writeup. You must finish this
    * implementation, as well as the implementations of get_last and fix, which
@@ -701,7 +735,11 @@ struct
        | Empty -> (e, Tree (fix (OneBranch (last, get_top t1))))
        | Tree t2' -> (e, Tree (fix (TwoBranch (Odd, last, t1, t2')))))
     (* Implement the odd case! *)
-    | TwoBranch (Odd, e, t1, t2) -> raise ImplementMe
+    | TwoBranch (Odd, e, t1, t2) -> 
+      let (last, q1') = get_last t1 in
+      (match q1' with
+       | Empty -> (e, Tree (fix (OneBranch (last, get_top t2))))
+       | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
   let run_tests () = raise ImplementMe
 end
