@@ -824,7 +824,6 @@ struct
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
   let test_add () =
-<<<<<<< HEAD
     let x = C.generate () in
     let q = add x empty in
     assert (q = Tree (Leaf x));
@@ -857,9 +856,8 @@ struct
     let q14 = add zz q10 in
     assert (q14 = Tree (TwoBranch (Even, zz, OneBranch (x,y), OneBranch (z,y))));
     ()
-=======
 
->>>>>>> acb45c48d40939940bb3f29162c6aebac0b06c93
+
 
   let test_is_empty () =
     let h = empty in
@@ -1040,11 +1038,10 @@ assert (treesort [2;4;5;3;1;1;2] = [1;1;2;2;3;4;5]);;
  * type defined by that module. You should use your BinaryHeap module.
  *)
  
-(* module CompSorter (C : COMPARABLE) : PRIOQUEUE =
+module CompSorter (C : COMPARABLE) : PRIOQUEUE =
 struct
-  let sorted = 
-  (BinaryHeap(IntCompare) :
-                        PRIOQUEUE with type elt = IntCompare.t) *)
+  let 
+end
 (* module type SETFUNCTOR = 
    functor (compare: COMPARABLE) ->
      module NewHeap = BinaryHeap(compare)
