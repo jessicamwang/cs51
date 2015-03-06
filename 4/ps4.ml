@@ -1,6 +1,6 @@
 (* PS4
- * Author: YOUR NAME HERE
- * Partner: YOUR PARTNER'S NAME HERE
+ * Author: Charles Liu
+ * Partner: Jessica Wang
  *)
 
 (* NOTE: Please read (and understand) all of the comments in this file! 
@@ -196,7 +196,18 @@ struct
    *
    * Hint: use C.compare. See delete for inspiration
    *)
-  let rec insert (x : elt) (t : tree) : tree = raise ImplementMe
+  let rec insert (x : elt) (t : tree) : tree = 
+    match t with
+    | Leaf -> Branch (empty, [x], empty)
+    | Branch (l, lst, r) ->
+      match lst with
+      | [] -> failwith "Invalid tree: empty list as node"
+      | hd::_ ->
+        match C.compare x hd with
+        | Less -> Branch (insert x l, lst, r)
+        | Equal -> Branch (l, x::lst, r)
+        | Greater -> Branch (l, lst, insert x r)
+  ;;
 
 (*>* Problem 2.1 *>*)
 
@@ -205,7 +216,18 @@ struct
    * that doesn't necessarily mean that x itself is in the
    * tree.
    *)
-  let rec search (x : elt) (t : tree) : bool = raise ImplementMe
+  let rec search (x : elt) (t : tree) : bool = 
+    match t with
+    | Leaf -> false
+    | Branch (l, lst, r) ->
+      match lst with
+      | [] -> failwith "Invalid tree: empty list as node"
+      | hd::_ ->
+        match C.compare x hd with
+        | Less -> search x l
+        | Equal -> List.exists ~f:(fun y -> y = x) lst
+        | Greater -> search x r
+  ;;
 
   (* A useful function for removing the node with the minimum value from
    * a binary tree, returning that node and the new tree.
