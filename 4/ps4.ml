@@ -289,13 +289,28 @@ struct
    * The exception "EmptyTree", defined within this module, might come in
    * handy. *)
 
-  let getmin (t : tree) : elt = raise ImplementMe
+  let getmin (t : tree) : elt = 
+    let (lst,_) = pull_min t in
+    match List.rev lst with 
+    |[] -> failwith "Invalid tree: empty list as node"
+    |hd::_ -> hd
+  ;;
 
+  
 (*>* Problem 2.3 *>*)
 
   (* Simply returns the maximum value of the tree t. Similarly should
    * return the last element in the matching list. *)
-  let rec getmax (t : tree) : elt = raise ImplementMe
+  let rec getmax (t : tree) : elt = 
+    match t with 
+    | Leaf -> raise EmptyTree
+    | Branch (_, v, Leaf) -> 
+       (match List.rev v with 
+        |[] -> failwith "Invalid tree: empty list as node"
+        |hd::_ -> hd )
+    | Branch (_, _, r) -> getmax r
+  ;;
+
 
   let test_insert () =
     let x = C.generate () in
@@ -452,11 +467,11 @@ struct
   type queue = elt list
 
 (*>* Problem 3.1 *>*)
-  let empty = raise ImplementMe
+  let empty = []
 
 (*>* Problem 3.2 *>*)
-  let is_empty (t : queue) = raise ImplementMe
-
+  let is_empty (t : queue) = 
+    t = empty
 
 (*>* Problem 3.3 *>*)
 
@@ -465,10 +480,21 @@ struct
    * module simply becomes a regular queue (i.e., elements inserted earlier
    * should be removed before elements of the same priority inserted later)
    *)
-  let rec add (e : elt) (q : queue) = raise ImplementMe
-
+   
+  let rec add (e : elt) (q : queue) = 
+    match q with 
+    |[] -> [e]
+    |hd::tl ->
+      match C.compare e hd with
+      |Less -> e::q
+      |_ -> hd::(add e tl)
+    
 (*>* Problem 3.4 *>*)
-  let take (q : queue) = raise ImplementMe
+  let take (q : queue) = 
+  match q with 
+  |[] -> raise QueueEmpty
+  |hd::tl -> (hd, tl)
+    
 
   let run_tests () = raise ImplementMe
 end
@@ -480,9 +506,7 @@ end
 
 (* Now implement a priority queue using a Binary Search Tree.
  * Luckily, you should be able to use *a lot* of your code from above! *)
-
-(* Uncomment when you finish! *)
-(*
+ 
 module TreeQueue(C : COMPARABLE) : PRIOQUEUE with type elt = C.t=
 struct
   exception QueueEmpty
@@ -490,11 +514,41 @@ struct
   (* You can use the module T to access the functions defined in BinSTree,
    * e.g. T.insert *)
   module T = (BinSTree(C) : (BINTREE with type elt = C.t))
+  
+  (* What's being stored in the priority queue *)
+  type elt = C.t
 
-  (* Implement the remainder of the module! *)
+  (* The queue itself (stores things of type elt) *)
+  type queue = T.tree
 
+  (* Returns an empty queue *)
+  let empty = T.empty
+
+  (* Takes a queue, and returns whether or not it is empty *)
+  let is_empty (t : queue) : bool =
+     t = empty
+    
+
+  (* Takes an element and a queue, and returns a new queue with the
+   * element added *)
+  let add (e : elt) (t : queue) : queue =
+     T.insert e t
+
+  (* Pulls the highest priority element out of the passed-in queue,
+   * also returning the queue with that element
+   * removed. Can raise the QueueEmpty exception. *)
+  let take (t : queue) : elt * queue =
+    let m = T.getmin t in
+    (m, T.delete m t)
+
+
+
+
+  (* Run invariant checks on the implementation of this binary tree.
+   * May raise Assert_failure exception *)
+  let run_tests =
+    T.run_tests
 end
-*)
 
 (*****************************************************************************)
 (*                               Part 4                                      *)
