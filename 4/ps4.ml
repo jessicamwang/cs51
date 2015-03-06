@@ -825,9 +825,6 @@ struct
        | Empty -> (e, Tree (fix (OneBranch (last, get_top t2))))
        | Tree t1' -> (e, Tree (fix (TwoBranch (Even, last, t1', t2)))))
 
-
-
-
   let test_add () =
     
 
@@ -838,7 +835,6 @@ struct
     assert (not (is_empty h));
     ()
     
-
   let test_get_top () =
 
   let test_fix () =
