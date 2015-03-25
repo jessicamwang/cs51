@@ -228,16 +228,46 @@ end
 (* DictSet: a functor that creates a SET by calling our           *)
 (* Dict.Make functor                                              *)
 (******************************************************************)
-(*
+
 module DictSet(C : COMPARABLE) : (SET with type elt = C.t) =
 struct
   module D = Dict.Make(struct
-      ??? fill this in!
+      open Order
+      type key = C.t
+      type value = C.t
+      let compare = C.compare
+      let string_of_key = C.string_of_t
+      let string_of_value = C.string_of_t
+      let gen_key = C.gen 
+      let gen_key_gt x = C.gen 
+      let gen_key_lt x = C.gen 
+      let gen_key_between x y () = None 
+      let gen_key_random () = C.gen_random ()
+      let gen_value () = C.gen_random ()
+      let gen_pair () = (gen_key(),gen_value())
   end)
 
   type elt = D.key
   type set = D.dict
-  let empty = ???
+  let empty = D.empty
+  let insert k d = (D.insert d k k)
+  let singleton = insert k empty
+  let member = D.member
+  let remove k d = (D.remove d k)
+  let choose d = 
+      match (D.choose d) with
+      |None -> None 
+      |Some (k, v, d1) -> Some (k, d1)
+  let is_empty d =
+      match (choose d) with 
+      |None -> true
+      |Some (_, _) -> false
+  let fold f = D.fold (fun k v a -> f k a)
+  
+  (*Charles you should check my union and intersect*)
+  let union = fold insert
+  let intersect s1 s2 =
+      (fold (fun e s -> if member s2 e then s else remove e s) s1 s2)
 
   (* implement the rest of the functions in the signature! *)
 
@@ -255,7 +285,7 @@ struct
   let run_tests () =
     ()
 end
-*)
+
 
 
 

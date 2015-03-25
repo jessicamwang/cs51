@@ -1,11 +1,11 @@
 (* NAMES:
  *
- * Partner 1's name: ______
- * Partner 1's code.seas account: _______
- *
+ * Partner 1's name: Charles Liu
+ * Partner 1's code.seas account: charlesliu
+ 
  * (Leave blank if you are working alone)
- * Partner 2's name: ______
- * Partner 2's code.seas account: _______
+ * Partner 2's name: Jessica Wang
+ * Partner 2's code.seas account: jessicawang
  *)
 
 open Core.Std
