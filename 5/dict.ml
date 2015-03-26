@@ -905,7 +905,7 @@ struct
     test_balance() ;
     test_fold() ;
     test_lookup() ;
-    test_member()
+    test_member();
 (*    test_insert() ; *)
     test_remove_nothing() ;
     test_remove_from_nothing() ;
