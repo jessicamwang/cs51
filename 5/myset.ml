@@ -280,7 +280,87 @@ struct
   (****************************************************************)
 
   (* add your test functions to run_tests *)
+  
+  let insert_list (d: set) (lst: elt list) : set =
+    List.fold_left lst ~f:(fun r k -> insert k r) ~init:d
+
+  let rec generate_random_list (size: int) : elt list =
+    if size <= 0 then []
+    else (C.gen_random()) :: (generate_random_list (size - 1))
+
+  let test_insert () =
+    let elts = generate_random_list 100 in
+    let s1 = insert empty elts in
+    List.iter elts ~f:(fun k -> assert(member s1 k)) ;
+    ()
+
+  let test_remove () =
+    let elts = generate_random_list 100 in
+    let s1 = insert empty elts in
+    let s2 = List.fold_right elts ~f:(fun k r -> remove k r) ~init:s1 in
+    List.iter elts ~f:(fun k -> assert(not (member s2 k))) ;
+    ()
+    
+  let test_union () = 
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    let elts2 = generate_random_list 100 in
+    let s2 = insert_list empty elts2 in
+    let unions1s2= union s1 s2 in
+    assert((union empty empty) = empty);
+    assert((union empty s1) = s1);
+    List.iter elts1 ~f:(fun k -> assert(member unions1s2 k));
+    List.iter elts2 ~f:(fun k -> assert(member unions1s2 k));
+    ()
+    
+  let rec list_intersect xs ys =
+    match xs, ys with
+      | [], _ -> []
+      | _, [] -> []
+      | xh::xt, yh::yt -> (match C.compare xh yh with
+          | Equal -> xh::(intersect xt yt)
+          | Less -> intersect xt ys
+          | Greater -> intersect xs yt)  
+  
+  let test_intersect () =
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    let elts2 = generate_random_list 100 in
+    let s2 = insert_list empty elts2 in
+    let intersects1s1 = intersect s1 s1 in
+    List.iter elts1 ~f:(fun k -> assert(member intersects1s1 k));
+    let intersects1empty = intersect s1 empty in
+    List.iter elts1 ~f:(fun k -> assert(not (member intersects1empty k)));
+    let intersects1s2 = intersect s1 s2 in
+    let eltsintersect = list_intersect elts1 elts 2 in
+    List.iter eltsintersect ~f:(fun k -> assert(member intersects1s2 k));
+    ()
+    
+  let test_member () =
+    ()
+    
+  let test_choose () =
+    ()
+    
+  let test_fold () =
+    ()
+    
+  let test_is_empty () =
+    ()
+    
+  let test_singleton () =
+    ()
+  
   let run_tests () =
+    test_insert () ;
+    test_remove () ;
+    test_union () ;
+    test_intersect () ;
+    test_member () ;
+    test_choose () ;
+    test_fold () ;
+    test_is_empty () ;
+    test_singleton () ;
     ()
 end
 
