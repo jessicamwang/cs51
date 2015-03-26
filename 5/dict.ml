@@ -849,6 +849,8 @@ struct
     
     let twotree = Two(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair4,Leaf)) in
     assert(balanced twotree) ;
+    let twotreereplace = insert twotree key2 value in
+    assert(twotreereplace = Two(Two(Leaf,(key2, value),Leaf),pair3,Two(Leaf,pair4,Leaf)));
     let twotreeless = insert twotree key1 value in
     assert(twotreeless = Two(Three(Leaf, (key1,value) , Leaf, pair2, Leaf), pair3, Two(Leaf, pair4,Leaf)));
     let twotreegreater = insert twotree key5 value in
