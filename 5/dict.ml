@@ -821,10 +821,34 @@ struct
     List.iter elts ~f:(fun (k, _) -> assert (member d1 k));
   ()
     
-(*
   let test_insert () =
-    raise TODO
-*)
+    let d1 = Leaf in
+    assert(balanced d1) ;
+    
+    let value = D.gen_value() in
+    let key1 = D.gen_key() in
+    let pair1 = (key1, D.gen_value ()) in
+    let key2 = D.gen_key_gt key1 () in
+    let pair2 = (key2, D.gen_value ()) in
+    let key3 = D.gen_key_gt key2 () in
+    let pair3 = (key3, D.gen_value ()) in
+    let key4 = D.gen_key_gt key3 () in
+    let pair4 = (key4, D.gen_value ()) in
+    let key4 = D.gen_key_gt key3 () in
+    let pair4 = (key4, D.gen_value ()) in
+    let key5 = D.gen_key_gt key4 () in
+    let pair5 = (key5, D.gen_value ()) in
+    
+    let twotree = Two(Two(Leaf,pair2,Leaf),pair3,Two(Leaf,pair4,Leaf)) in
+    assert(balanced twotree) ;
+    
+    let twotreeless = insert twotree key1 value in
+    assert(twotreeless = Two(Three(Leaf, (key1,value) , Leaf, pair2, Leaf), pair3, Two(Leaf, pair4,Leaf)));
+    
+    let threetree = Three(Two(Leaf,pair1,Leaf),pair2,Two(Leaf,pair3,Leaf),pair4,Two(Leaf,pair5,Leaf)) in
+    assert(balanced threetree) ;
+  ()
+    
 
   let test_remove_nothing () =
     let pairs1 = generate_pair_list 26 in
@@ -904,7 +928,7 @@ struct
     test_fold() ;
     test_lookup() ;
     test_member() ;
-(*    test_insert() ; *)
+    test_insert() ; 
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
