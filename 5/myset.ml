@@ -280,31 +280,28 @@ struct
   (****************************************************************)
 
   (* add your test functions to run_tests *)
-  
-  let insert_list (d: set) (lst: elt list) : set =
-    List.fold_left lst ~f:(fun r k -> insert k r) ~init:d
 
-  let rec generate_random_list (size: int) : elt list =
-    if size <= 0 then []
-    else (C.gen_random()) :: (generate_random_list (size - 1))
+  let rec generate_random_set (size: int) (s: set) : set =
+    if size <= 0 then empty
+    else generate_random_set (size - 1) (insert (D.gen_key_random ()) s) 
 
   let test_insert () =
-    let elts = generate_random_list 100 in
+    let elts = generate_random_set 100 in
     let s1 = insert empty elts in
-    List.iter elts ~f:(fun k -> assert(member s1 k)) ;
+    List.iter ~f:(fun k -> assert(member s1 k)) elts;
     ()
 
   let test_remove () =
-    let elts = generate_random_list 100 in
+    let elts = generate_random_set 100 in
     let s1 = insert empty elts in
     let s2 = List.fold_right elts ~f:(fun k r -> remove k r) ~init:s1 in
     List.iter elts ~f:(fun k -> assert(not (member s2 k))) ;
     ()
     
   let test_union () = 
-    let elts1 = generate_random_list 100 in
+    let elts1 = generate_random_set 100 in
     let s1 = insert_list empty elts1 in
-    let elts2 = generate_random_list 100 in
+    let elts2 = generate_random_set 100 in
     let s2 = insert_list empty elts2 in
     let unions1s2= union s1 s2 in
     assert((union empty empty) = empty);
@@ -323,9 +320,9 @@ struct
           | Greater -> intersect xs yt)  
   
   let test_intersect () =
-    let elts1 = generate_random_list 100 in
+    let elts1 = generate_random_set 100 in
     let s1 = insert_list empty elts1 in
-    let elts2 = generate_random_list 100 in
+    let elts2 = generate_random_set 100 in
     let s2 = insert_list empty elts2 in
     let intersects1s1 = intersect s1 s1 in
     List.iter elts1 ~f:(fun k -> assert(member intersects1s1 k));
