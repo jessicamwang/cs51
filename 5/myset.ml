@@ -308,14 +308,20 @@ struct
     List.iter elts ~f:(fun k -> assert(not (member s2 k))) ;
     ()
     
+  let set_equal (s1: set) (s2:set) : bool =
+    (fold (fun k a -> (member s1 k) && a) true s2) && (fold (fun k a -> (member s2 k) && a) true s1)
+    
   let test_union () = 
     let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
     let elts2 = generate_random_list 100 in
     let s2 = insert_list empty elts2 in
     let unions1s2= union s1 s2 in
-    assert((union empty empty) = empty);
-    assert((union empty s1) = s1);
+    assert(set_equal (union empty empty) =empty);
+    List.iter elts1 ~f:(fun x -> Printf.printf "%s\n" (string_of_elt x));
+    Printf.printf "%s\n" (string_of_set (union empty s1));
+    Printf.printf "%s\n" (string_of_set (s1));
+    assert(set_equal (union empty s1) s1);
     List.iter elts1 ~f:(fun k -> assert(member unions1s2 k));
     List.iter elts2 ~f:(fun k -> assert(member unions1s2 k));
     ()
@@ -342,7 +348,7 @@ struct
   let test_choose () =
     let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
-    (*List.iter elts1 ~f:(fun k -> assert((choose s1) != None));*)
+    List.iter elts1 ~f:(fun _ -> assert(not ((choose s1) = None )));
     assert((choose_until_empty 0 s1) = 100);
     assert((choose empty) = None);
     ()
@@ -353,9 +359,9 @@ struct
     let elts2 = generate_random_list 100 in
     let s2 = insert_list empty elts2 in
     let intersects1s2 = intersect s1 s2 in 
-    assert( fold ~f:(fun k a -> member s1 k && a) true empty);
-    assert( not (fold ~f:(fun k a -> member s1 k && a) false empty));
-    assert( fold ~f:(fun k a -> member s1 k && member s2 k && a ) true intersect s1s2);
+    assert( fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) true s1);
+    assert( not (fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && a) false s1));
+    assert( fold (fun k a -> (List.exists ~f:(fun x -> x=k) elts1) && (List.exists ~f:(fun x -> x=k) elts2) && a ) true intersects1s2);
     ()
     
   let test_is_empty () =
@@ -366,9 +372,9 @@ struct
     ()
     
   let test_singleton () =
-    let elts1 = generate_random_list 100 in
-    let s1 = insert_list empty elts1 in
-    let s2 = singleton (List.hd elts) in
+    let elt = C.gen_random() in
+    let s1 = insert elt empty in
+    let s2 = singleton (elt) in
     assert (s1 = s2);
     ()
   
@@ -413,6 +419,6 @@ IntDictSet.run_tests();;
 module Make(C : COMPARABLE) : (SET with type elt = C.t) =
   (* Change this line to use our dictionary implementation when your are
    * finished. *)
-  (*ListSet (C)*)
-  DictSet (C)
+  ListSet (C)
+ (* DictSet (C)*)
 

@@ -630,7 +630,7 @@ struct
   let string_of_value = D.string_of_value
   let string_of_dict (d: dict) : string = 
     fold (fun k v s ->
-            "(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ ") ") "" d
+            "(" ^ (string_of_key k) ^ "," ^ (string_of_value v) ^ ") " ^ s) "" d
 
   (* Debugging function. This will print out the tree in text format.
    * Use this function to see the actual structure of your 2-3 tree. *
