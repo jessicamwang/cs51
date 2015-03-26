@@ -280,28 +280,38 @@ struct
   (****************************************************************)
 
   (* add your test functions to run_tests *)
+  
+  let insert_list (d: set) (lst: elt list) : set =
+    List.fold_left lst ~f:(fun r k -> insert k r) ~init:d
 
-  let rec generate_random_set (size: int) (s: set) : set =
-    if size <= 0 then empty
-    else generate_random_set (size - 1) (insert (D.gen_key_random ()) s) 
+  let rec generate_random_list (size: int) : elt list =
+    if size <= 0 then []
+    else (C.gen_random()) :: (generate_random_list (size - 1))
+    
+  let test_member () =
+    let elts = generate_random_list 100 in
+    List.iter  elts ~f:(fun k -> assert(not (member empty k)));
+    let s1 = insert_list empty elts in
+    List.iter elts ~f:(fun k -> assert (member s1 k));
+    ()
 
   let test_insert () =
-    let elts = generate_random_set 100 in
-    let s1 = insert empty elts in
+    let elts = generate_random_list 100 in
+    let s1 = insert_list empty elts in
     List.iter ~f:(fun k -> assert(member s1 k)) elts;
     ()
 
   let test_remove () =
-    let elts = generate_random_set 100 in
-    let s1 = insert empty elts in
+    let elts = generate_random_list 100 in
+    let s1 = insert_list empty elts in
     let s2 = List.fold_right elts ~f:(fun k r -> remove k r) ~init:s1 in
     List.iter elts ~f:(fun k -> assert(not (member s2 k))) ;
     ()
     
   let test_union () = 
-    let elts1 = generate_random_set 100 in
+    let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
-    let elts2 = generate_random_set 100 in
+    let elts2 = generate_random_list 100 in
     let s2 = insert_list empty elts2 in
     let unions1s2= union s1 s2 in
     assert((union empty empty) = empty);
@@ -309,43 +319,57 @@ struct
     List.iter elts1 ~f:(fun k -> assert(member unions1s2 k));
     List.iter elts2 ~f:(fun k -> assert(member unions1s2 k));
     ()
-    
-  let rec list_intersect xs ys =
-    match xs, ys with
-      | [], _ -> []
-      | _, [] -> []
-      | xh::xt, yh::yt -> (match C.compare xh yh with
-          | Equal -> xh::(intersect xt yt)
-          | Less -> intersect xt ys
-          | Greater -> intersect xs yt)  
   
   let test_intersect () =
-    let elts1 = generate_random_set 100 in
+    let elts1 = generate_random_list 100 in
     let s1 = insert_list empty elts1 in
-    let elts2 = generate_random_set 100 in
+    let elts2 = generate_random_list 100 in
     let s2 = insert_list empty elts2 in
     let intersects1s1 = intersect s1 s1 in
     List.iter elts1 ~f:(fun k -> assert(member intersects1s1 k));
     let intersects1empty = intersect s1 empty in
     List.iter elts1 ~f:(fun k -> assert(not (member intersects1empty k)));
-    let intersects1s2 = intersect s1 s2 in
+    (*let intersects1s2 = intersect s1 s2 in
     let eltsintersect = list_intersect elts1 elts 2 in
-    List.iter eltsintersect ~f:(fun k -> assert(member intersects1s2 k));
+    List.iter eltsintersect ~f:(fun k -> assert(member intersects1s2 k));*)
     ()
     
-  let test_member () =
-    ()
+  let rec choose_until_empty (size : int) (s:set) : int =
+    match choose s with
+    |None -> size
+    |Some(_,s1) -> choose_until_empty (size+1) s1
     
   let test_choose () =
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    (*List.iter elts1 ~f:(fun k -> assert((choose s1) != None));*)
+    assert((choose_until_empty 0 s1) = 100);
+    assert((choose empty) = None);
     ()
     
   let test_fold () =
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    let elts2 = generate_random_list 100 in
+    let s2 = insert_list empty elts2 in
+    let intersects1s2 = intersect s1 s2 in 
+    assert( fold ~f:(fun k a -> member s1 k && a) true empty);
+    assert( not (fold ~f:(fun k a -> member s1 k && a) false empty));
+    assert( fold ~f:(fun k a -> member s1 k && member s2 k && a ) true intersect s1s2);
     ()
     
   let test_is_empty () =
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    assert( not(is_empty s1));
+    assert(is_empty empty);
     ()
     
   let test_singleton () =
+    let elts1 = generate_random_list 100 in
+    let s1 = insert_list empty elts1 in
+    let s2 = singleton (List.hd elts) in
+    assert (s1 = s2);
     ()
   
   let run_tests () =
