@@ -808,10 +808,15 @@ struct
     assert(List.fold_left ~f:(fun (k,v) -> ) )
 *)
 
-(*
-  let test_member () =
-    raise TODO
 
+  let test_member () =
+    let elts = generate_random_list 100 in
+    List.iter elts ~f:(fun (k, _) -> assert(not (member empty k)));
+    let d1 = insert_list empty elts in
+    List.iter elts ~f:(fun (k, _) -> assert (member d1 k));
+  ()
+    
+(*
   let test_insert () =
     raise TODO
 *)
@@ -874,23 +879,33 @@ struct
     assert(balanced r5) ;
     ()
 
-(*
+  let rec choose_until_empty (size : int) (d: dict): (int*bool) = 
+    match choose d with
+    |None -> (size, true)
+    |Some(k, _, d1) -> let (size1, bool1) = (choose_until_empty (size+1) d1) in
+                   (size1, (member d k) && bool1 && not (member d1 k))
+    
   let test_choose () = 
-    raise TODO
-*)
+    let pairs1 = generate_pair_list 26 in
+    let d1 = insert_list empty pairs1 in
+    List.iter pairs1 ~f:(fun _ -> assert(not ((choose d1) = None )));
+    assert((choose_until_empty 0 d1) = (26, true));
+    assert((choose empty) = None);
+    ()
+
 
   let run_tests () =
     test_balance() ;
     test_fold() ;
 (*)    test_lookup() ; *)
-(*    test_member() ; *)
+    test_member() ; 
 (*    test_insert() ; *)
     test_remove_nothing() ;
     test_remove_from_nothing() ;
     test_remove_in_order() ;
     test_remove_reverse_order() ;
     test_remove_random_order() ; 
-(*    test_choose() ; *)
+    test_choose() ;
     ()
 
 end

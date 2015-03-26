@@ -344,16 +344,26 @@ struct
     List.iter intersectelts ~f:(fun k -> assert(member intersects1s2 k));
     ()
     
-  let rec choose_until_empty (size : int) (s:set) : int =
+  let generate_greater_list (size: int) : elt list =
+    let rec helper (size: int) (current: elt) : elt list =
+      if size <= 0 then []
+      else
+        let new_current = C.gen_gt current () in
+        new_current :: (helper (size - 1) new_current)
+    in
+    helper size (C.gen_random ()) 
+  
+  let rec choose_until_empty (size : int) (s:set): int*bool =
     match choose s with
-    |None -> size
-    |Some(_,s1) -> choose_until_empty (size+1) s1
+    |None -> (size, true)
+    |Some(k,s1) -> let (size1, bool1) = (choose_until_empty (size+1) s1) in
+                   (size1, (member s k) && bool1 && not (member s1 k))
     
   let test_choose () =
-    let elts1 = generate_random_list 100 in
+    let elts1 = generate_greater_list 100 in
     let s1 = insert_list empty elts1 in
     List.iter elts1 ~f:(fun _ -> assert(not ((choose s1) = None )));
-    assert((choose_until_empty 0 s1) = 100);
+    assert((choose_until_empty 0 s1) = (100, true));
     assert((choose empty) = None);
     ()
     
