@@ -192,7 +192,9 @@ let scale n=
    give a simple definition for "selectivestream". This can be done quite
    elegantly. *)
 
-let rec selectivestream = failwith "Unimplemented" ;;
+let rec selectivestream = 
+  Cons(1, lazy(merge (scale 3 selectivestream) (scale 5 selectivestream)))
+;;
 
 (*>* Problem 2.3 *>*)
 (* Please give us an honest estimate of how long this part took
