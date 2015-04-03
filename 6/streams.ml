@@ -12,7 +12,7 @@ and 'a tr = Stem of 'a * 'a tree * 'a tree ;;
  * at the root of the tree *)
 
 let headt (t: 'a tree) : 'a =
-  let Stem(head, _, _) = t() in
+  let Stem(head, _, _) = t () in
   head
 ;;
 
@@ -21,12 +21,12 @@ let headt (t: 'a tree) : 'a =
  * left and right subtrees respectively *)
 
 let ltail (t: 'a tree) : 'a tree =
-  let Stem(_, ltail, _) = t() in
+  let Stem(_, ltail, _) = t () in
   ltail
 ;;
 
 let rtail (t: 'a tree) : 'a tree =
-  let Stem( _, _, rtail) = t() in
+  let Stem( _, _, rtail) = t () in
   rtail
 ;;
 
@@ -35,7 +35,7 @@ let rtail (t: 'a tree) : 'a tree =
  * over the given treestream *)
 
 let rec mapt (f: 'a -> 'b) (t: 'a tree) : 'b tree =
-  fun () -> Stem(f(headt t), mapt f (ltail t), mapt f (rtail t))
+  fun () -> Stem(f (headt t), mapt f (ltail t), mapt f (rtail t))
 ;;
 
 (*>* Problem 2.1.d *>*)
@@ -45,7 +45,8 @@ let rec mapt (f: 'a -> 'b) (t: 'a tree) : 'b tree =
  * the corresponding value in "zipt f t1 t2" should be "f x1 x2" *)
 
 let rec zipt (f: 'a -> 'b -> 'c) (t1: 'a tree) (t2: 'b tree) : 'c tree =
-  fun () -> Stem(f (headt t1) (headt t2), zipt f (ltail t1) (ltail t2), zipt f (rtail t1) (rtail t2))
+  fun () -> Stem(f (headt t1) (headt t2), zipt f (ltail t1) (ltail t2),
+                 zipt f (rtail t1) (rtail t2))
 ;;
 
 (* Define a treestream of all ones *)
@@ -107,14 +108,14 @@ let tail (s:'a stream) : 'a stream =
 ;;
 
 let rec map (f:'a -> 'b) (s:'a stream) : 'b stream =
-  Cons(f (head s), lazy(map f (tail s)))
+  Cons(f (head s), lazy (map f (tail s)))
 ;;
 
 (*>* Problem 2.2.c *>*)
 (* Define nats *)
 
 let rec nats = 
-  Cons(1, lazy(map ((+) 1) nats ))
+  Cons(1, lazy (map ((+) 1) nats))
 ;;
 
 (*>* Problem 2.2.d *>*)
@@ -124,7 +125,7 @@ let rec nats =
 
 let rec nth (n:int) (s:'a stream) : 'a =
   if n = 0 then head s
-  else nth (n - 1) (tail s)
+  else nth (n-1) (tail s)
 ;;
 
 (*>* Problem 2.2.e *>*)
@@ -135,19 +136,19 @@ let rec nth (n:int) (s:'a stream) : 'a =
  * REMOVE DUPLICATES *)
 
 let merge (s1:int stream) (s2:int stream) : int stream =
-  let rec helper s3 s4 insert=
-     if (head s3) = insert then
-        helper (tail s3) s4 insert
-     else if (head s4) = insert then
-        helper s3 (tail s4) insert
-     else if (head s3) = (head s4) then
-        Cons(head s3, lazy (helper (tail s3) (tail s4) (head s3)))
-     else if (head s3) < (head s4) then
-        Cons(head s3, lazy (helper (tail s3) s4 (head s3)))
-     else
-        Cons(head s4, lazy (helper s3 (tail s4) (head s4)))
+  let rec helper s s' insert=
+    if head s = insert then
+      helper (tail s) s' insert
+    else if head s' = insert then
+      helper s (tail s') insert
+    else if head s = head s' then
+      Cons(head s, lazy (helper (tail s) (tail s') (head s)))
+    else if head s < head s' then
+      Cons(head s, lazy (helper (tail s) s' (head s)))
+    else
+      Cons(head s', lazy (helper s (tail s') (head s')))
   in
-  if (head s1) >= (head s2) then
+  if head s1 >= head s2 then
       helper s1 s2 ((head s1) + 1)
   else
       helper s1 s2 ((head s2) + 1)
@@ -166,7 +167,7 @@ let merge (s1:int stream) (s2:int stream) : int stream =
 (* Write a function "scale", which takes an integer "n" and an int
  * stream "s", and multiplies each element of "s" by "n". *)
 
-let scale n= 
+let scale n = 
   map (( * ) n) 
 ;;
 
@@ -193,7 +194,7 @@ let scale n=
    elegantly. *)
 
 let rec selectivestream = 
-  Cons(1, lazy(merge (scale 3 selectivestream) (scale 5 selectivestream)))
+  Cons(1, lazy (merge (scale 3 selectivestream) (scale 5 selectivestream)))
 ;;
 
 (*>* Problem 2.3 *>*)

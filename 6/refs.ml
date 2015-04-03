@@ -13,6 +13,9 @@ open Core.Std
 (* Consider this mutable list type. *)
 type 'a mlist = Nil | Cons of 'a * (('a mlist) ref)
 
+(* Returns a pair of ints where the first int is the number of nodes not in
+ * a cycle and the second int is the number of nodes in a cycle
+*)
 let length_intro_cycle (lst : 'a mlist) : int * int =
   let rec find_cyc (f : ('a mlist) ref) (s : ('a mlist) ref) (n : int) : 
     ('a mlist) ref * int =
@@ -52,15 +55,16 @@ let length_intro_cycle (lst : 'a mlist) : int * int =
           | Cons(_, next) -> cycle_length next (n+1)
       in
       (intro_len, cycle_length init 1)
-
+;;
 
 (*>* Problem 1.1 *>*)
 (* Write a function has_cycle that returns whether a mutable list has a cycle.
  * You may want a recursive helper function. Don't worry about space usage. *)
 
 let has_cycle (lst : 'a mlist) : bool =
-  let (_,cyc_len) = length_intro_cycle lst in
+  let (_, cyc_len) = length_intro_cycle lst in
   cyc_len > 0
+;;
 
 (* Some mutable lists for testing. *)
 let list1a = Cons(2, ref Nil)
@@ -69,7 +73,9 @@ let list1 = Cons(1, ref list1b)
 let rec cycle_list1 = Cons(1, ref cycle_list1)
 let rec cycle_list2 = Cons(1, ref (Cons(2, ref cycle_list2)))
 let cycle_list3 = Cons(0, ref cycle_list2)
+let nil_list = Nil
 
+assert(not (has_cycle nil_list))
 assert(not (has_cycle list1a))
 assert(not (has_cycle list1b))
 assert(not (has_cycle list1))
@@ -99,6 +105,26 @@ let flatten (lst : 'a mlist) : unit =
   in
   let (intro_len, cyc_len) = length_intro_cycle lst in
   (advance (ref lst) (intro_len+cyc_len)) := Nil
+;;
+
+
+flatten list1;
+flatten cycle_list1;
+flatten cycle_list2;
+flatten cycle_list3;
+flatten list2;
+()
+
+assert(nil_list = Nil)
+assert(list1 = Cons(1, ref list1b))
+assert(list1b = Cons(2, ref list1a))
+assert(list1a = Cons(2, ref Nil))
+assert(cycle_list1 = Cons(1, ref Nil))
+assert(cycle_list2 = Cons(1, ref (Cons(2, ref Nil))))
+assert(cycle_list3 = Cons(0, ref (Cons(1, ref (Cons(2, ref Nil))))))
+assert(list2 = Cons(1, ref (Cons(2, ref Nil))))
+assert(!reflist = Nil)
+
 
 (*>* Problem 1.3 *>*)
 (* Write mlength, which finds the number of nodes in a mutable list. *)
@@ -106,6 +132,31 @@ let flatten (lst : 'a mlist) : unit =
 let mlength (lst : 'a mlist) : int =
   let (intro_len, cyc_len) = length_intro_cycle lst in
   intro_len + cyc_len
+;;
+
+let list1a = Cons(2, ref Nil)
+let list1b = Cons(2, ref list1a)
+let list1 = Cons(1, ref list1b)
+let rec cycle_list1 = Cons(1, ref cycle_list1)
+let rec cycle_list2 = Cons(1, ref (Cons(2, ref cycle_list2)))
+let cycle_list3 = Cons(0, ref cycle_list2)
+let nil_list = Nil
+
+assert(mlength nil_list = 0)
+assert(mlength list1a = 1)
+assert(mlength list1b = 2)
+assert(mlength list1 = 3)
+assert(mlength cycle_list1 = 1)
+assert(mlength cycle_list2 = 2)
+assert(mlength cycle_list3 = 3)
+
+let reflist = ref (Cons(2, ref Nil))
+assert(mlength !reflist = 1)
+let list2 = Cons(1, ref (Cons (2, reflist)))
+assert(mlength list2 = 3)
+let _ = reflist := list2
+assert(mlength list2 = 2)
+
 
 (*>* Problem 1.4 *>*)
 (* Please give us an honest estimate of how long this part took
