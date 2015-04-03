@@ -12,7 +12,8 @@ and 'a tr = Stem of 'a * 'a tree * 'a tree ;;
  * at the root of the tree *)
 
 let headt (t: 'a tree) : 'a =
-  failwith "Unimplemented"
+  let Stem(head, _, _) = t() in
+  head
 ;;
 
 (*>* Problem 2.1.b *>*)
@@ -20,11 +21,13 @@ let headt (t: 'a tree) : 'a =
  * left and right subtrees respectively *)
 
 let ltail (t: 'a tree) : 'a tree =
-  failwith "Unimplemented"
+  let Stem(_, ltail, _) = t() in
+  ltail
 ;;
 
 let rtail (t: 'a tree) : 'a tree =
-  failwith "Unimplemented"
+  let Stem( _, _, rtail) = t() in
+  rtail
 ;;
 
 (*>* Problem 2.1.c *>*)
@@ -32,7 +35,7 @@ let rtail (t: 'a tree) : 'a tree =
  * over the given treestream *)
 
 let rec mapt (f: 'a -> 'b) (t: 'a tree) : 'b tree =
-  failwith "Unimplemented"
+  fun () -> Stem(f(headt t), mapt f (ltail t), mapt f (rtail t))
 ;;
 
 (*>* Problem 2.1.d *>*)
@@ -42,14 +45,14 @@ let rec mapt (f: 'a -> 'b) (t: 'a tree) : 'b tree =
  * the corresponding value in "zipt f t1 t2" should be "f x1 x2" *)
 
 let rec zipt (f: 'a -> 'b -> 'c) (t1: 'a tree) (t2: 'b tree) : 'c tree =
-  failwith "Unimplemented"
+  fun () -> Stem(f (headt t1) (headt t2), zipt f (ltail t1) (ltail t2), zipt f (rtail t1) (rtail t2))
 ;;
 
 (* Define a treestream of all ones *)
 
 (*>* Problem 2.1.e *>*)
 let rec onest () =
-  failwith "Unimplemented"
+  Stem(1, onest, onest)
 ;;
 
 (* Define a treestream in which each positive natural number appears
@@ -68,7 +71,7 @@ let rec onest () =
 
 (*>* Problem 2.1.f *>*)
 let rec treenats () =
-  failwith "Unimplemented"
+  Stem(1, mapt (fun a -> 2*a) treenats, mapt (fun a -> (2*a + 1)) treenats)
 ;;
 
 (***************** Using the Lazy module ******************)
@@ -91,20 +94,28 @@ let rec ones = Cons(1, lazy(ones));;
 (* Implement the head function *)
 
 let head (s:'a stream) : 'a =
-  failwith "Unimplemented"
+  let Cons(head, _) = s in
+  head
 ;;
 
 (*>* Problem 2.2.b *>*)
 (* Implement map *)
 
+let tail (s:'a stream) : 'a stream =
+  let Cons(_, tail) = s in
+  Lazy.force tail
+;;
+
 let rec map (f:'a -> 'b) (s:'a stream) : 'b stream =
-  failwith "Unimplemented"
+  Cons(f (head s), lazy(map f (tail s)))
 ;;
 
 (*>* Problem 2.2.c *>*)
 (* Define nats *)
 
-let rec nats = failwith "Unimplemented" ;;
+let rec nats = 
+  Cons(1, lazy(map ((+) 1) nats ))
+;;
 
 (*>* Problem 2.2.d *>*)
 (* Write a function nth, which returns the nth element of a
@@ -112,7 +123,8 @@ let rec nats = failwith "Unimplemented" ;;
  * words, "nth 0 s" should be equivalent to "head s". *)
 
 let rec nth (n:int) (s:'a stream) : 'a =
-  failwith "Unimplemented"
+  if n = 0 then head s
+  else nth (n - 1) (tail s)
 ;;
 
 (*>* Problem 2.2.e *>*)
@@ -123,7 +135,22 @@ let rec nth (n:int) (s:'a stream) : 'a =
  * REMOVE DUPLICATES *)
 
 let merge (s1:int stream) (s2:int stream) : int stream =
-  failwith "Unimplemented"
+  let rec helper s3 s4 insert=
+     if (head s3) = insert then
+        helper (tail s3) s4 insert
+     else if (head s4) = insert then
+        helper s3 (tail s4) insert
+     else if (head s3) = (head s4) then
+        Cons(head s3, lazy (helper (tail s3) (tail s4) (head s3)))
+     else if (head s3) < (head s4) then
+        Cons(head s3, lazy (helper (tail s3) s4 (head s3)))
+     else
+        Cons(head s4, lazy (helper s3 (tail s4) (head s4)))
+  in
+  if (head s1) >= (head s2) then
+      helper s1 s2 ((head s1) + 1)
+  else
+      helper s1 s2 ((head s2) + 1)
 ;;
 
 (*>* Problem 2.2.f *>*)
@@ -131,14 +158,17 @@ let merge (s1:int stream) (s2:int stream) : int stream =
  * if we were to run "merge ones ones"? Answer within the comment. *)
 
 (*
- *  Answer:
+ *  Answer: If you merge ones ones since duplicates are not included, the stream created would only have one element
+    and streams are suppose to be infinite.
  *)
 
 (*>* Problem 2.2.g *>*)
 (* Write a function "scale", which takes an integer "n" and an int
  * stream "s", and multiplies each element of "s" by "n". *)
 
-let scale n = failwith "Unimplemented" ;;
+let scale n= 
+  map (( * ) n) 
+;;
 
 (*>* Problem 2.2.h *>*)
 (* Suppose we wish to create a stream of the positive integers "n" in
@@ -168,4 +198,4 @@ let rec selectivestream = failwith "Unimplemented" ;;
 (* Please give us an honest estimate of how long this part took
  * you to complete.  We care about your responses and will use
  * them to help guide us in creating future assignments. *)
-let minutes_spent : int = -1
+let minutes_spent : int = 60
