@@ -80,7 +80,8 @@ object (self)
   method get_name = "bee"
 
   (* ### TODO: Part 4 Aging ### *)
-  method draw = self#draw_circle Graphics.yellow Graphics.black ""
+  method draw = self#draw_circle Graphics.yellow Graphics.black
+                  (string_of_int (List.length pollen))
 
   method draw_z_axis = 2
 
