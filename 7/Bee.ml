@@ -26,6 +26,8 @@ object (self)
   (******************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  val mutable pollen = []
+
 
   (* ### TODO: Part 5 Smart Bees ### *)
 
@@ -36,6 +38,9 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 3 Actions ### *)
+  initializer
+    self#register_handler World.action_event (fun _ -> self#do_action);
+
 
   (* ### TODO: Part 6 Custom Events ### *)
 
@@ -50,6 +55,20 @@ object (self)
   (**************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  method private do_action = 
+    let neighbors = World.get self#get_pos in
+    List.iter self#deposit_pollen neighbors;
+    List.iter self#extract_pollen neighbors
+
+  method private deposit_pollen neighbor : unit = 
+    let rem = neighbor#receive_pollen pollen in
+    pollen <- rem
+
+  method private extract_pollen neighbor : unit =
+    match neighbor#forfeit_pollen with
+    | None -> ()
+    | Some p -> pollen <- p :: pollen
+
 
   (* ### TODO: Part 5 Smart Bees ### *)
 
