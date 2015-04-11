@@ -72,7 +72,11 @@ let rec onest () =
 
 (*>* Problem 2.1.f *>*)
 let rec treenats () =
-  Stem(1, mapt (fun a -> 2*a) treenats, mapt (fun a -> (2*a + 1)) treenats)
+  let rec powertwos () = Stem(1, mapt (( * ) 2) powertwos, 
+                                 mapt (( * ) 2) powertwos)
+  in
+  Stem(1, zipt (+) treenats powertwos,
+          zipt (+) treenats (mapt (( * ) 2) powertwos))
 ;;
 
 (***************** Using the Lazy module ******************)
