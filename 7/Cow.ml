@@ -1,5 +1,6 @@
 open WorldObject
 open WorldObjectI
+open Movable
 
 (* ### Part 2 Movement ### *)
 let cow_inverse_speed = Some 1
@@ -9,9 +10,9 @@ let max_consumed_objects = 100
 
 (** Cows will graze across the field until it has consumed a satisfactory number
     of flowers *)
-class cow p : world_object_i =
+class cow p : movable_t =
 object (self)
-  inherit world_object p as super
+  inherit moveable p cow_inverse_speed as super
 
   (******************************)
   (***** Instance Variables *****)
@@ -53,9 +54,9 @@ object (self)
   (***************************)
 
   (* ### TODO: Part 2 Movement ### *)
-(*
-  method next_direction = raise TODO
-*)
+
+  method next_direction = Direction.natural (cow.getPos) (hive.getPos)
+
 
   (* ### TODO: Part 6 Custom Events ### *)
 
