@@ -12,4 +12,8 @@ object (self)
 
   (* ### TODO: Part 4 Aging ### *)
 
+  method draw_picture = self#draw_circle (Graphics.rgb 150 150 150) Graphics.black
+                  ((Char.escaped name.[0]) ^ (Char.escaped name.[1]))
+                  
+  
 end

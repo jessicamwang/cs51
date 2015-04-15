@@ -2,6 +2,7 @@ open WorldObject
 open WorldObjectI
 open Movable
 open Ageable
+open CarbonBased
 
 (* ### Part 2 Movement ### *)
 let bee_inverse_speed = Some 1
@@ -21,8 +22,9 @@ let max_sensing_range = 5
 class bee p : ageable_t =
 object (self)
   (*inherit movable p bee_inverse_speed as super*)
-  inherit ageable p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super
-
+  (*inherit ageable p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super*)
+  
+  inherit carbon_based p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super
   (******************************)
   (***** Instance Variables *****)
   (******************************)
@@ -82,10 +84,11 @@ object (self)
   method get_name = "bee"
 
   (* ### TODO: Part 4 Aging ### *)
-  method draw = self#draw_circle Graphics.yellow Graphics.black
+  method draw_picture = self#draw_circle Graphics.yellow Graphics.black
                   (string_of_int (List.length pollen))
 
   method draw_z_axis = 2
+  
 
   (* ### TODO: Part 3 Actions ### *)
 

@@ -8,5 +8,8 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 4 Aging *)
-
+  
+  initializer
+    self#register_handler self#get_die_event (fun _ -> ignore(new Dust.dust self#get_pos self#get_name));
+  
 end

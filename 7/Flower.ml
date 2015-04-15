@@ -1,6 +1,7 @@
 open WorldObject
 open WorldObjectI
 open Ageable
+open CarbonBased
 
 (* ### Part 3 Actions ### *)
 let next_pollen_id = ref 0
@@ -21,7 +22,8 @@ let flower_lifetime = 2000
 class flower p pollen_id : ageable_t =
 object (self)
   (*inherit world_object p as super*)
-  inherit ageable p None (World.rand flower_lifetime) flower_lifetime as super
+  (*inherit ageable p None (World.rand flower_lifetime) flower_lifetime as super*)
+  inherit carbon_based p None (World.rand flower_lifetime) flower_lifetime as super
 
   (******************************)
   (***** Instance Variables *****)
@@ -57,7 +59,7 @@ object (self)
   method get_name = "flower"
 
   (* ### TODO: Part 4 Aging ### *)
-  method draw = self#draw_circle (Graphics.rgb 255 150 255) Graphics.black
+  method draw_picture = self#draw_circle (Graphics.rgb 255 150 255) Graphics.black
                   (string_of_int pollen_to_offer)
 
   method draw_z_axis = 1
