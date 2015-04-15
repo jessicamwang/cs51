@@ -27,7 +27,7 @@ sig
   val fire_event : 'a event -> 'a -> unit
 
   (** For every event value x fired from event e, map f e will fire an event
-      with value (f x). *
+      with value (f x). *)
   val map : ('a -> 'b) -> 'a event -> 'b event
 
   (** For every event value x fired from event e that satisfies p, filter p e

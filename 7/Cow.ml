@@ -10,9 +10,9 @@ let max_consumed_objects = 100
 
 (** Cows will graze across the field until it has consumed a satisfactory number
     of flowers *)
-class cow p : movable_t =
+class cow p hive: movable_t =
 object (self)
-  inherit moveable p cow_inverse_speed as super
+  inherit movable p cow_inverse_speed as super
 
   (******************************)
   (***** Instance Variables *****)
@@ -54,8 +54,10 @@ object (self)
   (***************************)
 
   (* ### TODO: Part 2 Movement ### *)
-
-  method next_direction = Direction.natural (cow.getPos) (hive.getPos)
+  method next_direction = 
+      if (Random.float 1. < 2. /. ((float) World.size)) then
+          World.direction_from_to (self#get_pos) (hive#get_pos)
+      else Some (Direction.random Random.int)
 
 
   (* ### TODO: Part 6 Custom Events ### *)
