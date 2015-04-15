@@ -99,9 +99,10 @@ object (self)
   (* ### TODO: Part 3 Actions ### *)
   method forfeit_honey n thief =
     if pollen < n then 
-      (pollen <- 0;
+      (let temp = pollen in
+       pollen <- 0;
        self#danger thief;
-       pollen)
+       temp)
     else
       (pollen <- pollen - n;
        self#danger thief;
