@@ -1,5 +1,6 @@
 open WorldObject
 open WorldObjectI
+open Ageable
 
 (* ### Part 3 Actions ### *)
 let next_pollen_id = ref 0
@@ -17,9 +18,10 @@ let flower_lifetime = 2000
 
 (** Flowers produce pollen.  They will also eventually die if they are not cross
     pollenated. *)
-class flower p pollen_id : world_object_i =
+class flower p pollen_id : ageable_t =
 object (self)
-  inherit world_object p as super
+  (*inherit world_object p as super*)
+  inherit ageable p None (World.rand flower_lifetime) flower_lifetime as super
 
   (******************************)
   (***** Instance Variables *****)
@@ -72,7 +74,10 @@ object (self)
          Some pollen_id)
     else None
 
-
+   method receive_pollen ps : int list = 
+     if List.exists (fun x -> not (x = pollen_id)) ps then
+         (self#reset_life);
+     ps
 
   (***************************)
   (***** Ageable Methods *****)
