@@ -43,16 +43,23 @@ object (self)
 
   (* ### TODO: Part 3 Actions ### *)
   method private do_action : unit = 
+    if (Random.float 1. < 1. /. (float spawn_probability)) && (cost_of_bee < pollen) then
+      (self#generate_bee;
+      pollen <- pollen - cost_of_bee);
     if Random.float 1. < 1. /. (float pollen_probability) then
-      pollen <- pollen + 1
+      (pollen <- pollen + 1)
+    
 
   (* ### TODO: Part 4 Aging ### *)
-
+ 
   (**************************)
   (***** Helper Methods *****)
   (**************************)
 
   (* ### TODO: Part 4 Aging ### *)
+  
+  method private generate_bee =
+    ignore( new Bee.bee self#get_pos)
 
   (* ### TODO: Part 5 Smart Bees ### *)
 
