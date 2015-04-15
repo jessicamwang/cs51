@@ -24,6 +24,7 @@ object (self)
 
   (* ### TODO: Part 6 Events ### *)
   val mutable life = bear_starting_life
+  val mutable alive = true;
 
   (***********************)
   (***** Initializer *****)
@@ -42,9 +43,11 @@ object (self)
     if self#get_pos = hive#get_pos then
        honey <- (honey + (hive#forfeit_honey pollen_theft_amount
                            (self :> world_object_i)))
-    else if self#get_pos = home#get_pos && 
-            hive#get_pollen < pollen_theft_amount / 2 then
+    else if alive && self#get_pos = home#get_pos && 
+            hive#get_pollen < pollen_theft_amount / 2 
+            then
       (ignore(home#receive_pollen []);
+       alive <- false;
        self#die)
 
 
@@ -68,8 +71,10 @@ object (self)
 
   (* ### TODO: Part 6 Custom Events ### *)
   method receive_sting =
-    life <- life - 1;
-    if life = 0 then self#die
+    (if life <= 0 && alive
+       then self#die;
+       alive <- false);
+    life <- life - 1
 
   (***************************)
   (***** Movable Methods *****)
