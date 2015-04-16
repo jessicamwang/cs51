@@ -59,7 +59,10 @@ object (self)
   (* ### TODO: Part 4 Aging ### *)
   
   method private generate_bee =
-    ignore( new Bee.bee self#get_pos)
+    if World.rand 2 = 1 then
+      ignore( new BeeBouncy.bee_bouncy self#get_pos (self :> world_object_i))
+    else 
+      ignore( new BeeRandom.bee_random self#get_pos (self :> world_object_i))
 
   (* ### TODO: Part 5 Smart Bees ### *)
 

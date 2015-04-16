@@ -19,7 +19,13 @@ let max_sensing_range = 5
 (** Bees travel the world searching for honey.  They are able to sense flowers
     within close range, and they will return to the hive once they have
     pollenated enough species of flowers. *)
-class bee p : ageable_t =
+class type bee_t =
+object
+  inherit Ageable.ageable_t
+
+  method private next_direction_default : Direction.direction option
+end
+class bee p (home:world_object_i) : bee_t =
 object (self)
   (*inherit movable p bee_inverse_speed as super*)
   (*inherit ageable p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super*)
@@ -34,6 +40,8 @@ object (self)
 
 
   (* ### TODO: Part 5 Smart Bees ### *)
+  val sensing_range = World.rand max_sensing_range
+  val pollen_types = World.rand max_pollen_types + 1
 
   (* ### TODO: Part 6 Custom Events ### *)
 
@@ -75,6 +83,23 @@ object (self)
 
 
   (* ### TODO: Part 5 Smart Bees ### *)
+  method private magnet_flower : world_object_i option =
+    let objs = World.objects_within_range self#get_pos sensing_range in
+    let fl = List.filter (fun x -> x#get_name = "flower" &&
+                                   match x#smells_like_pollen with
+                                   | None -> false
+                                   | Some p -> not (List.exists (fun y -> y = p) pollen))
+                         objs
+    in
+    match fl with
+    | [] -> None
+    | hd :: _ -> Some (List.fold_left (fun f1 f2 -> 
+                                         if (Direction.distance f1#get_pos self#get_pos) < 
+                                            (Direction.distance f2#get_pos self#get_pos)
+                                         then f1
+                                         else f2)
+                                       hd fl)
+
 
   (********************************)
   (***** WorldObjectI Methods *****)
@@ -98,7 +123,21 @@ object (self)
 
   (* ### TODO: Part 2 Movement ### *)
 
-  method next_direction = Some (Direction.random Random.int)
+  method next_direction = 
+    let rec check_unique_pollens p seen n =
+      n = 0 || 
+      match p with
+      | [] -> false
+      | hd :: tl -> if not (List.exists (fun x -> x = hd) seen) then
+                      check_unique_pollens tl (hd :: seen) (n-1)
+                    else check_unique_pollens tl seen n
+    in
+    if check_unique_pollens pollen [] pollen_types then 
+      World.direction_from_to self#get_pos home#get_pos
+    else 
+      match self#magnet_flower with
+      | None -> self#next_direction_default
+      | Some f -> World.direction_from_to self#get_pos f#get_pos
 
 
   (* ### TODO: Part 5 Smart Bees ### *)
@@ -110,5 +149,6 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 5 Smart Bees ### *)
+  method private next_direction_default = None
 
 end
