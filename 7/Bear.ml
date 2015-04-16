@@ -20,6 +20,7 @@ object (self)
   (******************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  val mutable honey = 0
 
   (* ### TODO: Part 6 Events ### *)
 
@@ -28,12 +29,19 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 3 Actions ### *)
+  initializer
+    self#register_handler World.action_event (fun _ -> self#do_action)
 
   (**************************)
   (***** Event Handlers *****)
   (**************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  method private do_action : unit = 
+    if self#get_pos = hive#get_pos then
+      honey <- (honey + ((hive :> Hive.hive)#forfeit_honey pollen_theft_amount
+                          (self :> world_object_i)))
+
 
   (* ### TODO: Part 6 Custom Events ### *)
 
@@ -45,7 +53,8 @@ object (self)
 
   method get_name = "bear"
 
-  method draw = self#draw_circle (Graphics.rgb 170 130 110) Graphics.black ""
+  method draw = self#draw_circle (Graphics.rgb 170 130 110) Graphics.black
+                  (string_of_int honey)
 
   method draw_z_axis = 3
 

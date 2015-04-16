@@ -19,18 +19,35 @@ object (self)
   (******************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  val mutable eaten = 0
 
   (***********************)
   (***** Initializer *****)
   (***********************)
 
   (* ### TODO: Part 3 Actions ### *)
+  initializer
+    self#register_handler World.action_event (fun _ -> self#do_action)
 
   (**************************)
   (***** Event Handlers *****)
   (**************************)
 
   (* ### TODO: Part 3 Actions ### *)
+  method private do_action : unit = 
+    let neighbors = World.get self#get_pos in
+    let eat obj = 
+      obj#die;
+      eaten <- eaten + 1;
+      print_string "*nom* ";
+      flush_all ()
+    in
+    List.iter (fun x -> 
+                 match (x :> world_object_i)#smells_like_pollen with
+                 | None -> ()
+                 | Some _ -> eat x) neighbors
+(*    let to_eat = List.filter (fun x -> x#smells_like_pollen) neighbors in
+    List.iter eat to_eat *)
 
   (* ### TODO: Part 6 Custom Events ### *)
 
@@ -42,7 +59,8 @@ object (self)
 
   method get_name = "cow"
 
-  method draw = self#draw_circle (Graphics.rgb 180 140 255) Graphics.white ""
+  method draw = self#draw_circle (Graphics.rgb 180 140 255) Graphics.black 
+                  (string_of_int eaten)
 
   method draw_z_axis = 4
 
