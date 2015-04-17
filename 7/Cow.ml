@@ -10,7 +10,7 @@ let max_consumed_objects = 100
 
 (** Cows will graze across the field until it has consumed a satisfactory number
     of flowers *)
-class cow p hive: movable_t =
+class cow p hive home : movable_t =
 object (self)
   inherit movable p cow_inverse_speed as super
 
@@ -35,19 +35,22 @@ object (self)
 
   (* ### TODO: Part 3 Actions ### *)
   method private do_action : unit = 
-    let neighbors = World.get self#get_pos in
-    let eat obj = 
-      obj#die;
-      eaten <- eaten + 1;
-      print_string "*nom* ";
-      flush_all ()
-    in
-    List.iter (fun x -> 
-                 match (x :> world_object_i)#smells_like_pollen with
-                 | None -> ()
-                 | Some _ -> eat x) neighbors
-(*    let to_eat = List.filter (fun x -> x#smells_like_pollen) neighbors in
-    List.iter eat to_eat *)
+    if self#get_pos = home#get_pos && eaten = max_consumed_objects then
+      self#die
+    else
+      let neighbors = World.get self#get_pos in
+      let eat obj = 
+        obj#die;
+        eaten <- eaten + 1;
+        print_string "*nom* ";
+        flush_all ()
+      in
+      List.iter (fun x -> 
+                   if eaten < max_consumed_objects then
+                     match (x :> world_object_i)#smells_like_pollen with
+                     | None -> ()
+                     | Some _ -> eat x) neighbors
+
 
   (* ### TODO: Part 6 Custom Events ### *)
 
@@ -73,8 +76,10 @@ object (self)
 
   (* ### TODO: Part 2 Movement ### *)
   method next_direction = 
-      if (Random.float 1. < 2. /. ((float) World.size)) then
-          World.direction_from_to (self#get_pos) (hive#get_pos)
+      if eaten = max_consumed_objects then
+        World.direction_from_to (self#get_pos) (home#get_pos)
+      else if World.rand World.size < 2 then
+        World.direction_from_to (self#get_pos) (hive#get_pos)
       else Some (Direction.random Random.int)
 
 

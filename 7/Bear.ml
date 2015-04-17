@@ -11,7 +11,7 @@ let bear_starting_life = 20
 (* ### Part 2 Movement ### *)
 let bear_inverse_speed = Some 10
 
-class bear p hive : movable_t =
+class bear p hive home : movable_t =
 object (self)
   inherit movable p bear_inverse_speed as super
 
@@ -23,6 +23,7 @@ object (self)
   val mutable honey = 0
 
   (* ### TODO: Part 6 Events ### *)
+  val mutable life = bear_starting_life
 
   (***********************)
   (***** Initializer *****)
@@ -39,8 +40,11 @@ object (self)
   (* ### TODO: Part 3 Actions ### *)
   method private do_action : unit = 
     if self#get_pos = hive#get_pos then
-      honey <- (honey + ((hive :> Hive.hive)#forfeit_honey pollen_theft_amount
-                          (self :> world_object_i)))
+       honey <- (honey + (hive#forfeit_honey pollen_theft_amount
+                           (self :> world_object_i)))
+    else if self#get_pos = home#get_pos && hive#get_pollen < pollen_theft_amount / 2 then
+       (ignore(home#receive_pollen []);
+        self#die)
 
 
   (* ### TODO: Part 6 Custom Events ### *)
@@ -62,6 +66,9 @@ object (self)
   (* ### TODO: Part 3 Actions ### *)
 
   (* ### TODO: Part 6 Custom Events ### *)
+  method receive_sting =
+    life <- life - 1;
+    if life = 0 then self#die
 
   (***************************)
   (***** Movable Methods *****)
@@ -69,8 +76,11 @@ object (self)
 
   (* ### TODO: Part 2 Movement ### *)
 
-  method next_direction = World.direction_from_to (self#get_pos) (hive#get_pos)
-
+  method next_direction = 
+    if honey = 0 then
+      World.direction_from_to (self#get_pos) (hive#get_pos)
+    else
+      World.direction_from_to (self#get_pos) (home#get_pos)
 
   (* ### TODO: Part 6 Custom Events ### *)
 

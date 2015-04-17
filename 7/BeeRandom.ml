@@ -19,7 +19,7 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 5 Smart Bees *)
-  method next_direction = Some (Direction.ord (World.rand 8))
+  method private next_direction_default = Some (Direction.ord (World.rand 8))
 
 end
 

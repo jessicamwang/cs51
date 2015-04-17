@@ -19,16 +19,17 @@ let gen_flowers () : unit =
                    (fun p -> ignore (new Flower.flower p !pollen_id))
 
 let gen_cave hive =
-  ignore (new Cave.cave (0,0))
+  ignore (new Cave.cave (0,0) hive)
 
 let gen_pasture hive =
-  ignore (new Pasture.pasture (World.size-1,World.size-1))
+  ignore (new Pasture.pasture (World.size-1,World.size-1) hive)
 
 let gen_bear hive =
-  ignore (new Bear.bear (0,0) hive)
+  ignore (new Bear.bear (0,0) hive (new Cave.cave (0,0) hive))
 
 let gen_cow hive =
-  ignore (new Cow.cow (World.size-1,World.size-1) hive)
+  ignore (new Cow.cow (World.size-1,World.size-1) hive
+                      (new Pasture.pasture (World.size-1,World.size-1) hive))
 
 let gen_hive () =
   (* Do not ignore, since we will need to pass the hive to some other objects. *)
@@ -40,10 +41,10 @@ let part1_initializer () : unit =
   ignore (new Flower.flower (1,1) 0) ;
   let hive = new Hive.hive (2,2) in
   ignore (new Bee.bee (3,3) (hive :> world_object_i)) ;
-  ignore (new Cave.cave (4,4)) ;
-  ignore (new Bear.bear (5,5) hive) ;
-  ignore (new Pasture.pasture (6,6)) ;
-  ignore (new Cow.cow (7,7) hive);
+  ignore (new Cave.cave (4,4) hive) ;
+  ignore (new Bear.bear (5,5) hive (new Cave.cave (4,4) hive)) ;
+  ignore (new Pasture.pasture (6,6) hive) ;
+  ignore (new Cow.cow (7,7) hive (new Pasture.pasture (6,6) hive));
   ignore hive
 
 let part2_initializer () : unit =

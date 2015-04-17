@@ -52,6 +52,7 @@ object (self)
   (* ### TODO: Part 3 Actions ### *)
   initializer
     self#register_handler World.action_event (fun _ -> self#do_action);
+    self#register_handler home#get_danger_event (fun _ -> self#do_danger);
 
 
   (* ### TODO: Part 6 Custom Events ### *)
@@ -61,6 +62,7 @@ object (self)
   (**************************)
 
   (* ### TODO: Part 6 Custom Events ### *)
+  method private do_danger = ()
 
   (**************************)
   (***** Helper Methods *****)
@@ -88,17 +90,18 @@ object (self)
     let fl = List.filter (fun x -> x#get_name = "flower" &&
                                    match x#smells_like_pollen with
                                    | None -> false
-                                   | Some p -> not (List.exists (fun y -> y = p) pollen))
+                                   | Some p -> not (List.mem p pollen))
                          objs
     in
     match fl with
     | [] -> None
-    | hd :: _ -> Some (List.fold_left (fun f1 f2 -> 
-                                         if (Direction.distance f1#get_pos self#get_pos) < 
-                                            (Direction.distance f2#get_pos self#get_pos)
-                                         then f1
-                                         else f2)
-                                       hd fl)
+    | hd :: _ -> Some (List.fold_left 
+                         (fun f1 f2 -> 
+                            if Direction.distance f1#get_pos self#get_pos < 
+                               Direction.distance f2#get_pos self#get_pos
+                            then f1
+                            else f2)
+                          hd fl)
 
 
   (********************************)
@@ -125,14 +128,14 @@ object (self)
 
   method next_direction = 
     let rec check_unique_pollens p seen n =
-      n = 0 || 
+      n = pollen_types || 
       match p with
       | [] -> false
-      | hd :: tl -> if not (List.exists (fun x -> x = hd) seen) then
-                      check_unique_pollens tl (hd :: seen) (n-1)
+      | hd :: tl -> if not (List.mem hd seen) then
+                      check_unique_pollens tl (hd :: seen) (n+1)
                     else check_unique_pollens tl seen n
     in
-    if check_unique_pollens pollen [] pollen_types then 
+    if check_unique_pollens pollen [] 0 then 
       World.direction_from_to self#get_pos home#get_pos
     else 
       match self#magnet_flower with

@@ -27,7 +27,7 @@ object (self)
   (***********************)
 
   (* ### TODO: Part 5 Smart Bees *)
-  method next_direction =
+  method private next_direction_default =
     let rec get_next_direction () = 
       if World.can_move (Direction.move_point self#get_pos direction) then
         direction
