@@ -59,7 +59,6 @@ let remove (p:int*int) (w:world_object_i) : unit =
 
 (** Same as remove but fails if the object is not in the list. *)
 let remove_must_exist (p:int*int) (w:world_object_i) : unit =
-  flush_all ();
   assert (List.mem w (get p)) ;
   remove p w
 

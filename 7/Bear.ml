@@ -71,10 +71,10 @@ object (self)
 
   (* ### TODO: Part 6 Custom Events ### *)
   method receive_sting =
-    (if life <= 0 && alive
-       then self#die;
-       alive <- false);
-    life <- life - 1
+    life <- life - 1;
+    if life <= 0 && alive then
+      (alive <- false;
+       self#die)
 
   (***************************)
   (***** Movable Methods *****)
