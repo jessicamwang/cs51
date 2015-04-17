@@ -21,6 +21,7 @@ object (self)
   (********************************)
 
   (* ### TODO: Part 5 Smart Bees *)
+  method get_name = "bee_bouncy"
 
   (***********************)
   (***** Bee Methods *****)
