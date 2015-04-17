@@ -24,6 +24,7 @@ object (self)
 
   (* ### TODO: Part 6 Events ### *)
   val mutable life = bear_starting_life
+  
   val mutable alive = true;
 
   (***********************)
