@@ -33,7 +33,7 @@ object (self)
     if hive#get_pollen > spawn_bear_pollen && 
        not (World.fold (fun x b -> b || x#get_name = "bear") false)
     then
-      (ignore(new Bear.bear self#get_pos hive (self :> world_object_i));
+      (ignore (new Bear.bear self#get_pos hive (self :> world_object_i));
        print_string "omg bears! ";
        flush_all ())
 

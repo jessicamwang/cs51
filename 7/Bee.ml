@@ -27,10 +27,9 @@ object
 end
 class bee p (home:world_object_i) : bee_t =
 object (self)
-  (*inherit movable p bee_inverse_speed as super*)
-  (*inherit ageable p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super*)
   
-  inherit carbon_based p bee_inverse_speed (World.rand bee_lifetime) bee_lifetime as super
+  inherit carbon_based p bee_inverse_speed (World.rand bee_lifetime) 
+          bee_lifetime as super
   (******************************)
   (***** Instance Variables *****)
   (******************************)
@@ -44,6 +43,7 @@ object (self)
   val pollen_types = World.rand max_pollen_types + 1
 
   (* ### TODO: Part 6 Custom Events ### *)
+  val mutable target = None
 
   (***********************)
   (***** Initializer *****)
@@ -52,7 +52,7 @@ object (self)
   (* ### TODO: Part 3 Actions ### *)
   initializer
     self#register_handler World.action_event (fun _ -> self#do_action);
-    self#register_handler home#get_danger_event (fun _ -> self#do_danger);
+    self#register_handler home#get_danger_event (fun x -> self#do_danger x);
 
 
   (* ### TODO: Part 6 Custom Events ### *)
@@ -62,7 +62,9 @@ object (self)
   (**************************)
 
   (* ### TODO: Part 6 Custom Events ### *)
-  method private do_danger = ()
+  method private do_danger tar = 
+    self#register_handler tar#get_die_event (fun x -> target <- None);
+    target <- Some tar
 
   (**************************)
   (***** Helper Methods *****)
@@ -72,7 +74,13 @@ object (self)
   method private do_action = 
     let neighbors = World.get self#get_pos in
     List.iter self#deposit_pollen neighbors;
-    List.iter self#extract_pollen neighbors
+    List.iter self#extract_pollen neighbors;
+    match target with 
+    | None -> ()
+    | Some t -> 
+      if self#get_pos = t#get_pos then 
+        (t#receive_sting;
+         self#die)
 
   method private deposit_pollen neighbor : unit = 
     let rem = neighbor#receive_pollen pollen in
@@ -127,20 +135,23 @@ object (self)
   (* ### TODO: Part 2 Movement ### *)
 
   method next_direction = 
-    let rec check_unique_pollens p seen n =
-      n = pollen_types || 
-      match p with
-      | [] -> false
-      | hd :: tl -> if not (List.mem hd seen) then
-                      check_unique_pollens tl (hd :: seen) (n+1)
-                    else check_unique_pollens tl seen n
-    in
-    if check_unique_pollens pollen [] 0 then 
-      World.direction_from_to self#get_pos home#get_pos
-    else 
-      match self#magnet_flower with
-      | None -> self#next_direction_default
-      | Some f -> World.direction_from_to self#get_pos f#get_pos
+    match target with 
+    | Some t -> World.direction_from_to self#get_pos t#get_pos
+    | None ->
+      let rec check_unique_pollens p seen n =
+        n = pollen_types || 
+        match p with
+        | [] -> false
+        | hd :: tl -> if not (List.mem hd seen) then
+                        check_unique_pollens tl (hd :: seen) (n+1)
+                      else check_unique_pollens tl seen n
+      in
+      if check_unique_pollens pollen [] 0 then 
+        World.direction_from_to self#get_pos home#get_pos
+      else 
+        match self#magnet_flower with
+        | None -> self#next_direction_default
+        | Some f -> World.direction_from_to self#get_pos f#get_pos
 
 
   (* ### TODO: Part 5 Smart Bees ### *)

@@ -23,7 +23,8 @@ class flower p pollen_id : ageable_t =
 object (self)
   (*inherit world_object p as super*)
   (*inherit ageable p None (World.rand flower_lifetime) flower_lifetime as super*)
-  inherit carbon_based p None (World.rand flower_lifetime) flower_lifetime as super
+  inherit carbon_based p None (World.rand flower_lifetime) 
+                       flower_lifetime as super
 
   (******************************)
   (***** Instance Variables *****)
@@ -46,9 +47,9 @@ object (self)
 
   (* ### TODO: Part 3 Actions ### *)
   method private do_action : unit =
-    if Random.float 1. < 1. /. (float produce_pollen_probability) then
+    if World.rand produce_pollen_probability < 1 then
       if pollen_to_offer < max_pollen then pollen_to_offer <- pollen_to_offer + 1;
-    if Random.float 1. < 1. /. (float bloom_probability) then
+    if World.rand bloom_probability < 1 then
       World.spawn 1 self#get_pos (fun p -> ignore (new flower p pollen_id))
 
   (********************************)
@@ -59,8 +60,9 @@ object (self)
   method get_name = "flower"
 
   (* ### TODO: Part 4 Aging ### *)
-  method draw_picture = self#draw_circle (Graphics.rgb 255 150 255) Graphics.black
-                  (string_of_int pollen_to_offer)
+  method draw_picture = self#draw_circle (Graphics.rgb 255 150 255) 
+                                         Graphics.black
+                                         (string_of_int pollen_to_offer)
 
   method draw_z_axis = 1
 
@@ -71,7 +73,7 @@ object (self)
 
   method forfeit_pollen : int option =
     if pollen_to_offer > 0 then
-      (if Random.float 1. < 1. /. (float forfeit_pollen_probability) then
+      (if World.rand forfeit_pollen_probability < 1 then
          pollen_to_offer <- pollen_to_offer - 1;
          Some pollen_id)
     else None

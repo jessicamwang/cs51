@@ -14,7 +14,7 @@ object (self)
   (******************************)
 
   (* ### TODO: Part 5 Smart Bees *)
-  val mutable direction = Some (Direction.ord (World.rand 8))
+  val mutable direction = Some (Direction.random World.rand)
 
   (********************************)
   (***** WorldObjectI Methods *****)
@@ -32,7 +32,7 @@ object (self)
       if World.can_move (Direction.move_point self#get_pos direction) then
         direction
       else
-        (direction <- Some (Direction.ord (World.rand 8));
+        (direction <- Some (Direction.random World.rand);
          get_next_direction ())
     in
     get_next_direction ()

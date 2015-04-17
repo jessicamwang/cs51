@@ -42,9 +42,10 @@ object (self)
     if self#get_pos = hive#get_pos then
        honey <- (honey + (hive#forfeit_honey pollen_theft_amount
                            (self :> world_object_i)))
-    else if self#get_pos = home#get_pos && hive#get_pollen < pollen_theft_amount / 2 then
-       (ignore(home#receive_pollen []);
-        self#die)
+    else if self#get_pos = home#get_pos && 
+            hive#get_pollen < pollen_theft_amount / 2 then
+      (ignore(home#receive_pollen []);
+       self#die)
 
 
   (* ### TODO: Part 6 Custom Events ### *)

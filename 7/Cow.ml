@@ -47,7 +47,7 @@ object (self)
       in
       List.iter (fun x -> 
                    if eaten < max_consumed_objects then
-                     match (x :> world_object_i)#smells_like_pollen with
+                     match x#smells_like_pollen with
                      | None -> ()
                      | Some _ -> eat x) neighbors
 
